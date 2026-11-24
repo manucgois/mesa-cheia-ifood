@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mesa Cheia · Cadastro</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topo">
+    <h1>Mesa Cheia</h1>
+    <p>Leve os clientes do delivery para o seu salão com o Comer Fora</p>
+  </header>
+
+  <main class="container">
+    <form id="form-cadastro" class="card">
+      <h2>Cadastre seu restaurante</h2>
+
+      <label for="nome">Nome do restaurante</label>
+      <input id="nome" name="nome" required maxlength="80">
+
+      <label for="cozinha">Tipo de cozinha</label>
+      <select id="cozinha" name="cozinha" required>
+        <option value="">Selecione</option>
+        <option>Pizza</option>
+        <option>Hambúrguer</option>
+        <option>Japonesa</option>
+        <option>Brasileira</option>
+        <option>Italiana</option>
+        <option>Árabe</option>
+        <option>Doces e sobremesas</option>
+        <option>Outra</option>
+      </select>
+
+      <label for="bairro">Bairro</label>
+      <input id="bairro" name="bairro" maxlength="60">
+
+      <label for="ticket">Ticket médio por pessoa (R$)</label>
+      <input id="ticket" name="ticket" type="number" min="1" step="0.01">
+
+      <label for="beneficio_tipo">Benefício do Comer Fora</label>
+      <select id="beneficio_tipo" name="beneficio_tipo" required>
+        <option value="">Selecione</option>
+        <option>2 por 1</option>
+        <option>Desconto</option>
+        <option>Doce grátis</option>
+        <option>Entrada grátis</option>
+        <option>Bebida grátis</option>
+        <option>Junte selos</option>
+        <option>Cashback</option>
+        <option>R$ 10 no local</option>
+      </select>
+
+      <label for="beneficio">Detalhe do benefício</label>
+      <input id="beneficio" name="beneficio" maxlength="120"
+             placeholder="Ex.: na pizza marguerita grande">
+
+      <label>Dias em que vale</label>
+      <div class="dias">
+        <label><input type="checkbox" name="dias" value="Seg"> Seg</label>
+        <label><input type="checkbox" name="dias" value="Ter"> Ter</label>
+        <label><input type="checkbox" name="dias" value="Qua"> Qua</label>
+        <label><input type="checkbox" name="dias" value="Qui"> Qui</label>
+        <label><input type="checkbox" name="dias" value="Sex"> Sex</label>
+        <label><input type="checkbox" name="dias" value="Sáb"> Sáb</label>
+        <label><input type="checkbox" name="dias" value="Dom"> Dom</label>
+      </div>
+
+      <label for="turno">Turno</label>
+      <select id="turno" name="turno">
+        <option>Almoço</option>
+        <option>Noturno</option>
+        <option>Dia todo</option>
+      </select>
+
+      <label for="tom">Tom da comunicação</label>
+      <select id="tom" name="tom">
+        <option value="acolhedor">Acolhedor</option>
+        <option value="descontraído">Descontraído</option>
+        <option value="sofisticado">Sofisticado</option>
+        <option value="familiar">Familiar</option>
+      </select>
+
+      <button class="botao" type="submit" id="botao-salvar">Criar meu painel</button>
+      <p id="mensagem" class="mensagem"></p>
+    </form>
+  </main>
+
+  <script type="module" src="js/cadastro.js"></script>
+</body>
+</html>
