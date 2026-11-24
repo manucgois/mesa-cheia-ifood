@@ -14,6 +14,38 @@
 
   <main class="container">
     <section id="dados" class="card">Carregando...</section>
+
+    <section id="kit" class="card" hidden>
+      <h2>Kit de divulgação</h2>
+      <p class="dica">A IA escreve, você revisa e aprova.</p>
+      <p id="kit-status" class="espaco"></p>
+
+      <button id="botao-gerar" class="botao">Gerar kit com IA</button>
+
+      <div id="kit-campos" hidden>
+        <label for="titulo_cartaz">Título do cartaz de mesa</label>
+        <input id="titulo_cartaz" maxlength="40">
+
+        <label for="texto_cartaz">Texto do cartaz</label>
+        <textarea id="texto_cartaz" maxlength="180"></textarea>
+
+        <label for="chamada_qr">Chamada ao lado do QR code</label>
+        <input id="chamada_qr" maxlength="60">
+
+        <label for="encarte_delivery">Encarte da sacola do delivery</label>
+        <textarea id="encarte_delivery" maxlength="220"></textarea>
+
+        <label for="post_redes">Post para redes sociais</label>
+        <textarea id="post_redes" maxlength="300"></textarea>
+
+        <div class="acoes">
+          <button id="botao-rascunho" class="botao secundario">Salvar rascunho</button>
+          <button id="botao-aprovar" class="botao">Aprovar kit</button>
+        </div>
+      </div>
+
+      <p id="kit-mensagem" class="mensagem"></p>
+    </section>
   </main>
 
   <script type="module" src="js/painel.js"></script>

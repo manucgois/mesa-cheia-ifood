@@ -76,3 +76,18 @@ input, select, textarea {
   font-size: 13px;
   font-weight: 600;
 }
+
+textarea { min-height: 80px; resize: vertical; }
+
+.acoes { display: flex; gap: 12px; }
+.acoes .botao { margin-top: 16px; }
+
+.secundario {
+  background: #fff;
+  color: var(--vermelho);
+  border: 1px solid var(--vermelho);
+}
+.secundario:hover { background: #FFF1F2; }
+
+.selo-rascunho { background: #FFF8E1; color: #8D6E00; }
+.ok { color: var(--verde); }
