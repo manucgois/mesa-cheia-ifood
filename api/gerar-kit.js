@@ -58,7 +58,6 @@ module.exports = async function handler(req, res) {
     }
     return res.status(500).json({
       erro: 'Não foi possível gerar o kit agora. Tente de novo.',
-      detalhe: String(erro.message).slice(0, 600), // TEMPORÁRIO: remover depois de resolver
     });
   }
 };
@@ -160,4 +159,26 @@ async function chamarGemini(modelo, corpo) {
   }
 
   const json = await resposta.json();
-  const texto = json.candidates?.[0]?.content?.parts
+  const texto = json.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!texto) {
+    throw new Error('O Gemini não devolveu texto.');
+  }
+  return validar(JSON.parse(texto));
+}
+
+// Confere se todas as peças vieram e corta o que passar do limite
+function validar(kit) {
+  const limpo = {};
+  for (const [campo, maximo] of Object.entries(LIMITES)) {
+    const valor = typeof kit[campo] === 'string' ? kit[campo].trim() : '';
+    if (!valor) {
+      throw new Error('Peça ausente na resposta: ' + campo);
+    }
+    limpo[campo] = valor.slice(0, maximo);
+  }
+  return limpo;
+}
+
+function esperar(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
