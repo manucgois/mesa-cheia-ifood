@@ -64,14 +64,23 @@ botaoGerar.addEventListener('click', async () => {
   botaoGerar.textContent = 'Gerando com IA...';
   mostrarMensagem('', '');
 
-  try {
+    try {
     // 1. Pede o kit para a função no servidor
     const resposta = await fetch('/api/gerar-kit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ restaurante_id: id }),
+      signal: AbortSignal.timeout(60000), // o painel desiste depois de 60 segundos
     });
-    const resultado = await resposta.json();
+
+    // Lê como texto primeiro: se o servidor quebrar, a resposta pode não ser JSON
+    const texto = await resposta.text();
+    let resultado;
+    try {
+      resultado = JSON.parse(texto);
+    } catch {
+      throw new Error('O servidor não respondeu como esperado. Tente de novo em instantes.');
+    }
     if (!resposta.ok) throw new Error(resultado.erro || 'Erro ao gerar o kit.');
 
     // 2. Guarda como rascunho no banco
@@ -87,7 +96,11 @@ botaoGerar.addEventListener('click', async () => {
     mostrarStatus();
     mostrarMensagem('Kit gerado. Revise os textos antes de aprovar.', 'ok');
   } catch (erro) {
-    mostrarMensagem(erro.message, 'erro');
+    if (erro.name === 'TimeoutError') {
+      mostrarMensagem('A geração demorou demais. Tente de novo.', 'erro');
+    } else {
+      mostrarMensagem(erro.message, 'erro');
+    }
   } finally {
     botaoGerar.disabled = false;
     botaoGerar.textContent = kitAtual ? 'Gerar nova versão com IA' : 'Gerar kit com IA';

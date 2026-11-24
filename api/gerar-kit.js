@@ -1,7 +1,6 @@
 // Função serverless da Vercel: roda no servidor, nunca no navegador.
 // Endereço: /api/gerar-kit
 
-// Tamanho máximo de cada peça do kit (em caracteres)
 const LIMITES = {
   titulo_cartaz: 40,
   texto_cartaz: 180,
@@ -9,6 +8,9 @@ const LIMITES = {
   encarte_delivery: 220,
   post_redes: 300,
 };
+
+// Erros que costumam passar sozinhos: vale tentar de novo
+const ERROS_TEMPORARIOS = [429, 500, 503];
 
 const INSTRUCOES = `Você é redator(a) de marketing do iFood e cria materiais para restaurantes parceiros divulgarem o Comer Fora: benefícios para quem come no salão, ativados no app do iFood.
 
@@ -48,10 +50,13 @@ module.exports = async function handler(req, res) {
     return res.status(200).json(kit);
   } catch (erro) {
     console.error(erro);
-    if (erro.status === 429) {
-      return res.status(429).json({ erro: 'Muitas gerações seguidas. Espere um minuto e tente de novo.' });
+    if (erro.name === 'TimeoutError') {
+      return res.status(504).json({ erro: 'A IA demorou demais para responder. Tente de novo.' });
     }
-        return res.status(500).json({
+    if (erro.status === 429 || erro.status === 503) {
+      return res.status(503).json({ erro: 'A IA está sobrecarregada agora. Tente de novo em alguns segundos.' });
+    }
+    return res.status(500).json({
       erro: 'Não foi possível gerar o kit agora. Tente de novo.',
       detalhe: String(erro.message).slice(0, 600), // TEMPORÁRIO: remover depois de resolver
     });
@@ -71,9 +76,33 @@ async function buscarRestaurante(id) {
   return linhas[0] || null;
 }
 
-async function gerarComGemini(r) {
-  const modelo = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+// Tenta o modelo principal (2 vezes) e, se ele estiver indisponível, o modelo reserva
+async function gerarComGemini(restaurante) {
+  const corpo = montarCorpo(restaurante);
+  const modelos = [
+    process.env.GEMINI_MODEL || 'gemini-3.8-flash',
+    process.env.GEMINI_MODEL_RESERVA,
+  ].filter(Boolean); // tira da lista o reserva, se ele não estiver configurado
 
+  let ultimoErro;
+  for (const modelo of modelos) {
+    for (let tentativa = 1; tentativa <= 2; tentativa++) {
+      try {
+        return await chamarGemini(modelo, corpo);
+      } catch (erro) {
+        ultimoErro = erro;
+        if (!ERROS_TEMPORARIOS.includes(erro.status)) {
+          throw erro; // erro permanente (chave errada, pedido inválido): não adianta repetir
+        }
+        console.warn(`Modelo ${modelo} indisponível (${erro.status}), tentativa ${tentativa}.`);
+        await esperar(1500 * tentativa); // espera 1,5 s e depois 3 s
+      }
+    }
+  }
+  throw ultimoErro;
+}
+
+function montarCorpo(r) {
   const dados = [
     `Restaurante: ${r.nome}`,
     `Cozinha: ${r.cozinha}`,
@@ -86,7 +115,7 @@ async function gerarComGemini(r) {
     `Tom: ${r.tom}`,
   ].join('\n');
 
-  const corpo = {
+  return {
     systemInstruction: { parts: [{ text: INSTRUCOES }] },
     contents: [{
       role: 'user',
@@ -108,7 +137,9 @@ async function gerarComGemini(r) {
       },
     },
   };
+}
 
+async function chamarGemini(modelo, corpo) {
   const resposta = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,
     {
@@ -118,32 +149,15 @@ async function gerarComGemini(r) {
         'x-goog-api-key': process.env.GEMINI_API_KEY,
       },
       body: JSON.stringify(corpo),
+      signal: AbortSignal.timeout(15000), // desiste de cada tentativa depois de 15 segundos
     }
   );
 
   if (!resposta.ok) {
-    const erro = new Error('Gemini respondeu ' + resposta.status + ': ' + await resposta.text());
+    const erro = new Error(`Gemini (${modelo}) respondeu ${resposta.status}: ${await resposta.text()}`);
     erro.status = resposta.status;
     throw erro;
   }
 
   const json = await resposta.json();
-  const texto = json.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!texto) {
-    throw new Error('O Gemini não devolveu texto.');
-  }
-  return validar(JSON.parse(texto));
-}
-
-// Confere se todas as peças vieram e corta o que passar do limite
-function validar(kit) {
-  const limpo = {};
-  for (const [campo, maximo] of Object.entries(LIMITES)) {
-    const valor = typeof kit[campo] === 'string' ? kit[campo].trim() : '';
-    if (!valor) {
-      throw new Error('Peça ausente na resposta: ' + campo);
-    }
-    limpo[campo] = valor.slice(0, maximo);
-  }
-  return limpo;
-}
+  const texto = json.candidates?.[0]?.content?.parts
