@@ -46,7 +46,22 @@
 
       <p id="kit-mensagem" class="mensagem"></p>
     </section>
+
+        <section id="materiais" class="card" hidden>
+      <h2>Materiais para o salão e o delivery</h2>
+      <p class="dica">Cada QR code registra de onde o cliente veio.</p>
+
+      <div class="acoes">
+        <button id="botao-imprimir" class="botao">Imprimir materiais</button>
+        <a id="link-teste" class="botao secundario" target="_blank">Testar como cliente</a>
+      </div>
+
+      <div id="pecas" class="pecas"></div>
+    </section>
+
   </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 
   <script type="module" src="js/painel.js"></script>
 </body>

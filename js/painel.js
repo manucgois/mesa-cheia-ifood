@@ -11,6 +11,9 @@ const kitMensagem = document.getElementById('kit-mensagem');
 const botaoGerar = document.getElementById('botao-gerar');
 const botaoRascunho = document.getElementById('botao-rascunho');
 const botaoAprovar = document.getElementById('botao-aprovar');
+const secaoMateriais = document.getElementById('materiais');
+const areaPecas = document.getElementById('pecas');
+const linkTeste = document.getElementById('link-teste');
 
 let kitAtual = null; // o kit mais recente salvo no banco
 
@@ -57,6 +60,7 @@ async function carregarKit() {
   kitAtual = data && data.length > 0 ? data[0] : null;
   if (kitAtual) preencherCampos(kitAtual);
   mostrarStatus();
+  mostrarMateriais();
 }
 
 botaoGerar.addEventListener('click', async () => {
@@ -94,6 +98,7 @@ botaoGerar.addEventListener('click', async () => {
     kitAtual = data;
     preencherCampos(kitAtual);
     mostrarStatus();
+    mostrarMateriais();
     mostrarMensagem('Kit gerado. Revise os textos antes de aprovar.', 'ok');
   } catch (erro) {
     if (erro.name === 'TimeoutError') {
@@ -130,6 +135,7 @@ async function salvar(status) {
   kitAtual = data;
   mostrarStatus();
   mostrarMensagem(status === 'aprovado' ? 'Kit aprovado!' : 'Rascunho salvo.', 'ok');
+  mostrarMateriais();
 }
 
 // ---------- Funções de apoio ----------
@@ -170,5 +176,62 @@ function escapar(texto) {
   div.textContent = texto ?? '';
   return div.innerHTML;
 }
+
+// ---------- Materiais com QR code ----------
+
+function mostrarMateriais() {
+  if (!kitAtual || kitAtual.status !== 'aprovado') {
+    secaoMateriais.hidden = true; // só imprime o que o dono aprovou
+    return;
+  }
+
+  const base = `${window.location.origin}/r.html?r=${id}&o=`;
+  linkTeste.href = base + 'mesa';
+
+  areaPecas.innerHTML = `
+    <div class="peca">
+      <p class="peca-tipo">Cartaz de mesa</p>
+      <h3>${escapar(kitAtual.titulo_cartaz)}</h3>
+      <p>${escapar(kitAtual.texto_cartaz)}</p>
+      <div class="qr">${gerarQr(base + 'mesa')}</div>
+      <p><strong>${escapar(kitAtual.chamada_qr)}</strong></p>
+      <p class="peca-marca">iFood pra comer fora</p>
+    </div>
+
+    <div class="peca">
+      <p class="peca-tipo">Display de balcão</p>
+      <h3>${escapar(kitAtual.titulo_cartaz)}</h3>
+      <div class="qr">${gerarQr(base + 'balcao')}</div>
+      <p><strong>${escapar(kitAtual.chamada_qr)}</strong></p>
+      <p class="peca-marca">iFood pra comer fora</p>
+    </div>
+
+    <div class="peca">
+      <p class="peca-tipo">Encarte da sacola do delivery</p>
+      <p>${escapar(kitAtual.encarte_delivery)}</p>
+      <div class="qr">${gerarQr(base + 'sacola')}</div>
+      <p><strong>${escapar(kitAtual.chamada_qr)}</strong></p>
+      <p class="peca-marca">iFood pra comer fora</p>
+    </div>
+
+    <div class="peca nao-imprimir">
+      <p class="peca-tipo">Post para redes sociais</p>
+      <p>${escapar(kitAtual.post_redes)}</p>
+      <p class="dica espaco">Link para colocar na bio ou no post:</p>
+      <p class="link">${escapar(base + 'redes')}</p>
+    </div>
+  `;
+
+  secaoMateriais.hidden = false;
+}
+
+function gerarQr(texto) {
+  const qr = qrcode(0, 'M'); // 0 = tamanho automático; M = correção de erro média
+  qr.addData(texto);
+  qr.make();
+  return qr.createSvgTag(4, 2); // tamanho de cada quadradinho e margem
+}
+
+document.getElementById('botao-imprimir').addEventListener('click', () => window.print());
 
 carregar();
