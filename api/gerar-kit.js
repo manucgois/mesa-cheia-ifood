@@ -51,7 +51,10 @@ module.exports = async function handler(req, res) {
     if (erro.status === 429) {
       return res.status(429).json({ erro: 'Muitas gerações seguidas. Espere um minuto e tente de novo.' });
     }
-    return res.status(500).json({ erro: 'Não foi possível gerar o kit agora. Tente de novo.' });
+        return res.status(500).json({
+      erro: 'Não foi possível gerar o kit agora. Tente de novo.',
+      detalhe: String(erro.message).slice(0, 600), // TEMPORÁRIO: remover depois de resolver
+    });
   }
 };
 
