@@ -41,10 +41,25 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ erro: 'Restaurante inválido.' });
   }
 
+  // Quem está pedindo? O navegador manda o token do login no cabeçalho Authorization
+  const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  if (!token) {
+    return res.status(401).json({ erro: 'Faça login para gerar o kit.' });
+  }
+
   try {
+    const usuario = await buscarUsuario(token);
+    if (!usuario) {
+      return res.status(401).json({ erro: 'Sua sessão expirou. Entre de novo.' });
+    }
+
     const restaurante = await buscarRestaurante(restaurante_id);
     if (!restaurante) {
       return res.status(404).json({ erro: 'Restaurante não encontrado.' });
+    }
+    // Só o dono gera kit para o próprio restaurante (protege também a cota do Gemini)
+    if (restaurante.dono_id !== usuario.id) {
+      return res.status(403).json({ erro: 'Você não tem acesso a este restaurante.' });
     }
     const campanha = await buscarCampanhaAtiva(restaurante_id);
     if (!campanha) {
@@ -69,6 +84,16 @@ module.exports = async function handler(req, res) {
     });
   }
 };
+
+// Confere o token com o Supabase Auth e devolve o usuário (ou null se for inválido)
+async function buscarUsuario(token) {
+  const resposta = await fetch(`${process.env.SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: process.env.SUPABASE_KEY, Authorization: `Bearer ${token}` },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!resposta.ok) return null;
+  return resposta.json();
+}
 
 // Lê o restaurante direto no Supabase (não confia em dados vindos do navegador)
 async function buscarRestaurante(id) {

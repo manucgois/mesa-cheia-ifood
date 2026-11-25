@@ -229,6 +229,7 @@ a.botao { display: block; text-align: center; text-decoration: none; }
   text-decoration: none;
   color: var(--texto);
 }
+button.restaurante-item { width: 100%; background: none; font: inherit; text-align: left; cursor: pointer; }
 .restaurante-item:hover { border-color: var(--vermelho); background: #FFF8F8; }
 .restaurante-item strong { display: block; }
 .restaurante-entrar { color: var(--vermelho); font-weight: 600; white-space: nowrap; }

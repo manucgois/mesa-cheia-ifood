@@ -25,8 +25,8 @@
       <h2>Leve quem pede delivery para o seu salão</h2>
       <p>Uma função dentro do iFood: sua loja já está cadastrada, você só escolhe o benefício. A IA cria o kit de divulgação e o painel mostra quantos clientes cada peça trouxe.</p>
       <div class="hero-acoes">
-        <a class="botao botao-branco" href="#entrar">Entrar com minha loja</a>
-        <a class="botao botao-contorno-branco" href="painel.html?r=11111111-1111-4111-8111-111111111111">Ver demonstração</a>
+        <a class="botao botao-branco" href="#entrar">Entrar</a>
+        <a class="botao botao-contorno-branco usar-conta" href="#entrar" data-email="brasa@example.com">Ver demonstração</a>
       </div>
     </div>
   </section>
@@ -34,7 +34,7 @@
   <section class="passos-cards">
     <div class="passo">
       <div class="passo-numero">1</div>
-      <h3>Entre com sua loja</h3>
+      <h3>Entre com sua conta</h3>
       <p>Nome, cozinha, endereço e ticket médio já vêm do seu cadastro no iFood.</p>
     </div>
     <div class="passo">
@@ -51,15 +51,25 @@
 
   <main class="container">
     <section id="entrar" class="card">
-      <h2>Entrar com sua loja do iFood</h2>
-      <p class="aviso">Simulação do login. No produto real, o restaurante já estaria logado no Portal do Parceiro e esta seria uma aba dele. Os restaurantes abaixo são fictícios.</p>
+      <h2>Entrar no Mesa Cheia</h2>
+      <p class="dica">No produto real, o restaurante entraria com a conta do Portal do Parceiro e o Mesa Cheia seria uma aba dele. Neste protótipo, use uma das contas de demonstração.</p>
 
-      <label for="busca">Busque pelo nome do restaurante ou pela cidade</label>
-      <input id="busca" type="search" placeholder="Ex.: Brasa ou São Paulo" autocomplete="off">
+      <div id="ja-conectado" class="aviso" hidden></div>
 
-      <div id="lista-restaurantes" class="lista-restaurantes">
-        <p class="dica espaco">Carregando restaurantes...</p>
-      </div>
+      <form id="form-login">
+        <label for="email">E-mail</label>
+        <input id="email" name="email" type="email" required autocomplete="username">
+
+        <label for="senha">Senha</label>
+        <input id="senha" name="senha" type="password" required autocomplete="current-password">
+
+        <button class="botao" type="submit" id="botao-entrar">Entrar</button>
+        <p id="mensagem" class="mensagem"></p>
+      </form>
+
+      <h3 class="subtitulo">Contas de demonstração</h3>
+      <p class="dica">Restaurantes fictícios. Senha de todas: <b>mesacheia123</b></p>
+      <div id="contas-demo" class="lista-restaurantes"></div>
     </section>
   </main>
 

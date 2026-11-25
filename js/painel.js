@@ -2,7 +2,7 @@ import { supabase } from './db.js';
 
 const CAMPOS = ['titulo_cartaz', 'texto_cartaz', 'chamada_qr', 'encarte_delivery', 'post_redes'];
 
-const id = new URLSearchParams(window.location.search).get('r');
+let id = null; // o id do restaurante do dono logado (descoberto no carregar)
 const areaDados = document.getElementById('dados');
 const secaoKit = document.getElementById('kit');
 const kitCampos = document.getElementById('kit-campos');
@@ -52,15 +52,22 @@ let kitAtual = null;             // o kit mais recente DA CAMPANHA ATIVA
 // ---------- Restaurante ----------
 
 async function carregar() {
-  if (!id) return mostrarNaoEncontrado();
+  // 1. Sem login, não há painel: volta para a tela de entrada
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    window.location.href = 'index.html#entrar';
+    return;
+  }
 
+  // 2. O restaurante é descoberto pela conta, não pelo endereço da página
   const { data: r, error } = await supabase
     .from('restaurantes')
     .select('*')
-    .eq('id', id)
-    .single();
+    .eq('dono_id', session.user.id)
+    .maybeSingle();
 
   if (error || !r) return mostrarNaoEncontrado();
+  id = r.id;
 
   // Dados que já vêm do cadastro do restaurante no iFood: o dono não digita nada aqui
   const local = [r.bairro, r.cidade].filter(Boolean).map(escapar).join(', ');
@@ -74,11 +81,13 @@ async function carregar() {
         </p>
       </div>
       <div class="dados-acoes">
-        <a href="index.html#entrar" class="botao secundario">Trocar de loja</a>
-        <p class="dica">Simulação do login do Portal do Parceiro.</p>
+        <button id="botao-sair" class="botao secundario">Sair</button>
+        <p class="dica">Conectado como ${escapar(session.user.email)}</p>
       </div>
     </div>
   `;
+
+  document.getElementById('botao-sair').addEventListener('click', sair);
 
   restauranteAtual = r;
   await carregarCampanha();
@@ -271,8 +280,19 @@ function mostrarMensagemCampanha(texto, tipo) {
 }
 
 function mostrarNaoEncontrado() {
-  areaDados.innerHTML = '<p class="erro">Restaurante não encontrado. <a href="index.html#entrar">Buscar minha loja</a>.</p>';
+  areaDados.innerHTML = '<p class="erro">Esta conta não tem restaurante ligado a ela. <button type="button" class="link-botao" id="botao-sair">Sair</button></p>';
+  document.getElementById('botao-sair').addEventListener('click', sair);
 }
+
+async function sair() {
+  await supabase.auth.signOut();
+  window.location.href = 'index.html';
+}
+
+// Se a sessão acabar (logout em outra aba, por exemplo), volta para a entrada
+supabase.auth.onAuthStateChange((evento) => {
+  if (evento === 'SIGNED_OUT') window.location.href = 'index.html';
+});
 
 // ---------- Kit ----------
 
@@ -303,7 +323,11 @@ botaoGerar.addEventListener('click', async () => {
     // 1. Pede o kit para a função no servidor
     const resposta = await fetch('/api/gerar-kit', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        // O token prova para o servidor quem está pedindo (ele confere se é o dono)
+        Authorization: `Bearer ${await tokenAtual()}`,
+      },
       body: JSON.stringify({ restaurante_id: id }),
       signal: AbortSignal.timeout(60000), // o painel desiste depois de 60 segundos
     });
@@ -379,6 +403,12 @@ async function salvar(status) {
 }
 
 // ---------- Funções de apoio ----------
+
+// Pega o token da sessão na hora (o Supabase renova sozinho quando ele expira)
+async function tokenAtual() {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session ? session.access_token : '';
+}
 
 function preencherCampos(kit) {
   CAMPOS.forEach((campo) => {
