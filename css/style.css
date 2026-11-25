@@ -107,7 +107,7 @@ input:focus, select:focus, textarea:focus {
   outline: 2px solid rgba(234, 29, 44, 0.25);
   border-color: var(--vermelho);
 }
-textarea { min-height: 80px; resize: vertical; }
+textarea { min-height: 80px; resize: vertical; field-sizing: content; }
 
 .dias { display: flex; flex-wrap: wrap; gap: 12px; }
 .dias label { display: flex; align-items: center; gap: 4px; margin: 0; font-weight: 400; }
@@ -136,7 +136,7 @@ a.botao { display: block; text-align: center; text-decoration: none; }
 .botao-escuro { background: #111; }
 .botao-escuro:hover { background: #333; }
 
-.botao-branco { background: #fff; color: var(--vermelho); }
+.botao-branco { background: #fff; color: var(--vermelho); border: 2px solid #fff; }
 .botao-branco:hover { background: #FFF1F2; }
 
 .botao-contorno-branco { background: transparent; color: #fff; border: 2px solid #fff; }
