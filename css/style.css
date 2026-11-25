@@ -145,3 +145,24 @@ a.botao { display: block; text-align: center; text-decoration: none; }
   .card { border: none; padding: 0; }
   .peca { border: 2px dashed #999; break-inside: avoid; page-break-inside: avoid; margin-bottom: 24px; }
 }
+
+/* ---------- Resultados ---------- */
+.subtitulo { font-size: 15px; margin: 20px 0 8px; }
+
+.metricas { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
+@media (min-width: 600px) { .metricas { grid-template-columns: repeat(3, 1fr); } }
+.metrica { background: var(--fundo); border-radius: 12px; padding: 12px 14px; }
+.metrica-rotulo { font-size: 13px; color: var(--cinza); }
+.metrica-valor { font-size: 24px; font-weight: 700; }
+.metrica-nota { font-size: 11px; color: var(--cinza); }
+.metrica-destaque { background: #FFF1F2; }
+.metrica-destaque .metrica-valor { color: var(--vermelho); }
+
+.barra-linha { margin: 10px 0; }
+.barra-rotulo { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+.barra { height: 12px; background: var(--fundo); border-radius: 999px; overflow: hidden; }
+.barra span { display: block; height: 100%; background: var(--vermelho); border-radius: 999px; }
+
+.tabela { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tabela th, .tabela td { padding: 8px 6px; border-bottom: 1px solid var(--borda); text-align: left; }
+.tabela th { color: var(--cinza); font-weight: 600; font-size: 13px; }

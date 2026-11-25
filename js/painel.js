@@ -14,6 +14,20 @@ const botaoAprovar = document.getElementById('botao-aprovar');
 const secaoMateriais = document.getElementById('materiais');
 const areaPecas = document.getElementById('pecas');
 const linkTeste = document.getElementById('link-teste');
+const secaoResultados = document.getElementById('resultados');
+const areaMetricas = document.getElementById('metricas');
+const areaFunil = document.getElementById('funil');
+const areaOrigem = document.getElementById('por-origem');
+
+const NOMES_ORIGEM = {
+  mesa: 'Cartaz de mesa',
+  balcao: 'Display de balcão',
+  sacola: 'Encarte da sacola',
+  redes: 'Redes sociais',
+};
+
+let restauranteAtual = null; // guardamos para usar o ticket médio
+
 
 let kitAtual = null; // o kit mais recente salvo no banco
 
@@ -39,8 +53,12 @@ async function carregar() {
     <p class="dica espaco">Guarde o link desta página: é o seu painel.</p>
   `;
 
+  restauranteAtual = r;
+  secaoResultados.hidden = false;
   secaoKit.hidden = false;
   await carregarKit();
+  await carregarResultados();
+  setInterval(carregarResultados, 10000); // atualiza a cada 10 segundos
 }
 
 function mostrarNaoEncontrado() {
@@ -233,5 +251,95 @@ function gerarQr(texto) {
 }
 
 document.getElementById('botao-imprimir').addEventListener('click', () => window.print());
+
+// ---------- Resultados ----------
+
+async function carregarResultados() {
+  if (document.hidden) return; // aba em segundo plano: não consulta o banco à toa
+
+  const { data: eventos, error } = await supabase
+    .from('eventos')
+    .select('tipo, origem, pessoas')
+    .eq('restaurante_id', id);
+
+  if (error) return console.error(error);
+
+  // Conta os eventos de um tipo (e, se informada, de uma origem)
+  const contar = (tipo, origem) =>
+    eventos.filter((e) => e.tipo === tipo && (origem === undefined || e.origem === origem)).length;
+
+  const leituras = contar('leitura');
+  const salvos = contar('beneficio_salvo');
+  const checkins = contar('checkin');
+  const pessoas = eventos
+    .filter((e) => e.tipo === 'checkin')
+    .reduce((soma, e) => soma + (e.pessoas || 0), 0);
+  const ticket = Number(restauranteAtual.ticket_medio) || 0;
+
+  areaMetricas.innerHTML = `
+    ${cartaoMetrica('Leituras do QR', leituras)}
+    ${cartaoMetrica('Benefícios salvos', salvos)}
+    ${cartaoMetrica('Check-ins', checkins)}
+    ${cartaoMetrica('Conversão', percentual(checkins, leituras) + '%', 'check-ins ÷ leituras', true)}
+    ${cartaoMetrica('Pessoas atendidas', pessoas)}
+    ${cartaoMetrica('Faturamento estimado', ticket ? formatarReais(pessoas * ticket) : '—',
+        ticket ? 'pessoas × ticket médio' : 'informe o ticket médio no cadastro')}
+  `;
+
+  areaFunil.innerHTML = `
+    ${barra('Leram o QR', leituras, leituras)}
+    ${barra('Salvaram o benefício', salvos, leituras)}
+    ${barra('Fizeram check-in', checkins, leituras)}
+  `;
+
+  // Tabela por origem e a peça campeã (a que trouxe mais check-ins)
+  const origens = Object.keys(NOMES_ORIGEM);
+  const campea = origens.reduce((melhor, o) =>
+    contar('checkin', o) > contar('checkin', melhor) ? o : melhor, origens[0]);
+  const temCampea = contar('checkin', campea) > 0;
+
+  const linhas = origens.map((o) => `
+    <tr>
+      <td>${NOMES_ORIGEM[o]} ${temCampea && o === campea ? '<span class="selo">Campeã</span>' : ''}</td>
+      <td>${contar('leitura', o)}</td>
+      <td>${contar('checkin', o)}</td>
+      <td>${percentual(contar('checkin', o), contar('leitura', o))}%</td>
+    </tr>
+  `).join('');
+
+  areaOrigem.innerHTML = `
+    <table class="tabela">
+      <thead><tr><th>Peça</th><th>Leituras</th><th>Check-ins</th><th>Conversão</th></tr></thead>
+      <tbody>${linhas}</tbody>
+    </table>
+  `;
+}
+
+function cartaoMetrica(rotulo, valor, nota = '', destaque = false) {
+  return `
+    <div class="metrica ${destaque ? 'metrica-destaque' : ''}">
+      <p class="metrica-rotulo">${rotulo}</p>
+      <p class="metrica-valor">${valor}</p>
+      ${nota ? `<p class="metrica-nota">${nota}</p>` : ''}
+    </div>
+  `;
+}
+
+function barra(rotulo, valor, total) {
+  return `
+    <div class="barra-linha">
+      <div class="barra-rotulo"><span>${rotulo}</span><strong>${valor}</strong></div>
+      <div class="barra"><span style="width: ${percentual(valor, total)}%"></span></div>
+    </div>
+  `;
+}
+
+function percentual(parte, total) {
+  return total ? Math.round((parte / total) * 100) : 0;
+}
+
+function formatarReais(valor) {
+  return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
 
 carregar();
