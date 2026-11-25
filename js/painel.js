@@ -16,7 +16,12 @@ const areaPecas = document.getElementById('pecas');
 const linkTeste = document.getElementById('link-teste');
 const secaoResultados = document.getElementById('resultados');
 const areaMetricas = document.getElementById('metricas');
-const areaFunil = document.getElementById('funil');
+const areaPorDia = document.getElementById('por-dia');
+const areaInsight = document.getElementById('insight');
+const semResultados = document.getElementById('sem-resultados');
+const comResultados = document.getElementById('com-resultados');
+const navAbas = document.getElementById('abas');
+const avisoPendente = document.getElementById('aba-pendente');
 const areaOrigem = document.getElementById('por-origem');
 const textoCampanhaResultados = document.getElementById('resultados-campanha');
 const blocoComparacao = document.getElementById('comparacao-bloco');
@@ -77,8 +82,56 @@ async function carregar() {
 
   restauranteAtual = r;
   await carregarCampanha();
+  navAbas.hidden = false;
+  abrirAbaInicial();
   setInterval(carregarResultados, 10000); // atualiza a cada 10 segundos
 }
+
+// ---------- Abas ----------
+// Cada aba é uma tarefa do dono: ver resultados, cuidar da campanha, imprimir materiais.
+
+const ABAS = ['resultados', 'campanha', 'materiais'];
+
+function mostrarAba(nome) {
+  if (!ABAS.includes(nome) || abaBloqueada(nome)) nome = 'campanha';
+  ABAS.forEach((aba) => {
+    const ativa = aba === nome;
+    document.getElementById(`aba-${aba}`).hidden = !ativa;
+    const botao = document.getElementById(`aba-btn-${aba}`);
+    botao.setAttribute('aria-selected', String(ativa));
+    botao.classList.toggle('ativa', ativa);
+  });
+  history.replaceState(null, '', '#' + nome); // recarregar a página volta para a mesma aba
+  if (nome === 'resultados') carregarResultados();
+}
+
+// Materiais só existem depois que o dono aprova o kit
+function abaBloqueada(nome) {
+  return nome === 'materiais' && !(kitAtual && kitAtual.status === 'aprovado');
+}
+
+// Atualiza o estado das abas: Materiais bloqueada e o aviso "pendente" na Campanha
+function atualizarAbas() {
+  const botaoMateriais = document.getElementById('aba-btn-materiais');
+  const bloqueada = abaBloqueada('materiais');
+  botaoMateriais.disabled = bloqueada;
+  botaoMateriais.title = bloqueada ? 'Aprove o kit na aba Campanha para liberar os materiais' : '';
+  avisoPendente.hidden = !!(campanhaAtual && kitAtual && kitAtual.status === 'aprovado');
+}
+
+// Quem já tem campanha cai nos Resultados; quem ainda não tem, na Campanha
+function abrirAbaInicial() {
+  const pedida = window.location.hash.slice(1);
+  if (ABAS.includes(pedida)) return mostrarAba(pedida);
+  mostrarAba(campanhaAtual ? 'resultados' : 'campanha');
+}
+
+document.querySelectorAll('.aba-botao').forEach((botao) => {
+  botao.addEventListener('click', () => mostrarAba(botao.dataset.aba));
+});
+document.querySelectorAll('.ir-campanha').forEach((botao) => {
+  botao.addEventListener('click', () => mostrarAba('campanha'));
+});
 
 // ---------- Campanha ----------
 
@@ -101,13 +154,15 @@ async function carregarCampanha() {
 
   // Sem campanha ativa não há kit para gerar nem material para imprimir
   secaoKit.hidden = !campanhaAtual;
-  secaoResultados.hidden = data.length === 0;
+  semResultados.hidden = data.length > 0;
+  comResultados.hidden = data.length === 0;
   if (campanhaAtual) {
     await carregarKit();
   } else {
     kitAtual = null;
     secaoMateriais.hidden = true;
   }
+  atualizarAbas();
   await carregarResultados();
 }
 
@@ -276,6 +331,7 @@ botaoGerar.addEventListener('click', async () => {
     preencherCampos(kitAtual);
     mostrarStatus();
     mostrarMateriais();
+    atualizarAbas();
     mostrarMensagem('Kit gerado. Revise os textos antes de aprovar.', 'ok');
   } catch (erro) {
     if (erro.name === 'TimeoutError') {
@@ -311,8 +367,15 @@ async function salvar(status) {
 
   kitAtual = data;
   mostrarStatus();
-  mostrarMensagem(status === 'aprovado' ? 'Kit aprovado!' : 'Rascunho salvo.', 'ok');
   mostrarMateriais();
+  atualizarAbas();
+  if (status === 'aprovado') {
+    kitMensagem.className = 'mensagem ok';
+    kitMensagem.innerHTML = 'Kit aprovado! <button type="button" class="link-botao" id="ver-materiais">Ver os materiais para imprimir →</button>';
+    document.getElementById('ver-materiais').addEventListener('click', () => mostrarAba('materiais'));
+  } else {
+    mostrarMensagem('Rascunho salvo.', 'ok');
+  }
 }
 
 // ---------- Funções de apoio ----------
@@ -424,13 +487,13 @@ document.getElementById('botao-imprimir').addEventListener('click', () => window
 // ---------- Resultados ----------
 
 async function carregarResultados() {
-  if (document.hidden) return; // aba em segundo plano: não consulta o banco à toa
-
+  if (document.hidden) return; // aba do navegador em segundo plano: não consulta o banco à toa
+  if (document.getElementById('aba-resultados').hidden) return; // só calcula quando a aba está aberta
   if (campanhas.length === 0) return; // ainda não há campanha: nada para medir
 
   const { data: todos, error } = await supabase
     .from('eventos')
-    .select('tipo, origem, pessoas, campanha_id')
+    .select('tipo, origem, pessoas, campanha_id, criado_em')
     .eq('restaurante_id', id);
 
   if (error) return console.error(error);
@@ -438,10 +501,9 @@ async function carregarResultados() {
   // Os números principais são da campanha ativa (ou da última, se nenhuma estiver ativa)
   const foco = campanhaAtual || campanhas[0];
   const eventos = todos.filter((e) => e.campanha_id === foco.id);
-  textoCampanhaResultados.textContent =
-    `${foco.status === 'ativa' ? 'Campanha atual' : 'Última campanha'}: ${foco.beneficio_tipo}` +
-    `${foco.beneficio ? ' ' + foco.beneficio : ''} · desde ${formatarData(foco.criada_em)}`;
-  mostrarComparacao(todos);
+  textoCampanhaResultados.innerHTML =
+    `<span class="selo">${foco.status === 'ativa' ? 'Campanha atual' : 'Última campanha'}</span> ` +
+    `${escapar(foco.beneficio_tipo)}${foco.beneficio ? ' ' + escapar(foco.beneficio) : ''} · desde ${formatarData(foco.criada_em)}`;
 
   // Conta os eventos de um tipo (e, se informada, de uma origem)
   const contar = (tipo, origem) =>
@@ -455,49 +517,88 @@ async function carregarResultados() {
     .reduce((soma, e) => soma + (e.pessoas || 0), 0);
   const ticket = Number(restauranteAtual.ticket_medio) || 0;
 
+  // 4 números, cada um aparece uma vez só. O funil fica dentro dos cartões (as barras).
   areaMetricas.innerHTML = `
-    ${cartaoMetrica('Leituras do QR', leituras)}
-    ${cartaoMetrica('Benefícios salvos', salvos)}
-    ${cartaoMetrica('Check-ins', checkins)}
-    ${cartaoMetrica('Conversão', percentual(checkins, leituras) + '%', 'check-ins ÷ leituras', true)}
-    ${cartaoMetrica('Pessoas atendidas', pessoas)}
-    ${cartaoMetrica('Faturamento estimado', ticket ? formatarReais(pessoas * ticket) : '—',
-        ticket ? 'pessoas × ticket médio' : 'ticket médio indisponível')}
+    ${kpi('Leituras do QR', leituras, 'pessoas que abriram a oferta')}
+    ${kpi('Salvaram o benefício', salvos, `${percentual(salvos, leituras)}% das leituras`, percentual(salvos, leituras))}
+    ${kpi('Check-ins', checkins, `${percentual(checkins, leituras)}% de conversão`, percentual(checkins, leituras), true)}
+    ${kpi('Faturamento estimado', ticket ? formatarReais(pessoas * ticket) : '—',
+        ticket ? `${pessoas} pessoas × ${formatarReais(ticket)}` : 'ticket médio indisponível')}
   `;
 
-  areaFunil.innerHTML = `
-    ${barra('Leram o QR', leituras, leituras, false)}
-    ${barra('Salvaram o benefício', salvos, leituras)}
-    ${barra('Fizeram check-in', checkins, leituras)}
-  `;
+  mostrarPorOrigem(contar, checkins);
+  mostrarPorDia(eventos, foco);
+  mostrarComparacao(todos);
+}
 
-  // Lista por origem e a peça campeã (a que trouxe mais check-ins)
-  const origens = Object.keys(NOMES_ORIGEM);
-  const campea = origens.reduce((melhor, o) =>
-    contar('checkin', o) > contar('checkin', melhor) ? o : melhor, origens[0]);
-  const temCampea = contar('checkin', campea) > 0;
+// Barras com os check-ins de cada peça, e a frase que resume o resultado
+function mostrarPorOrigem(contar, totalCheckins) {
+  const linhas = Object.keys(NOMES_ORIGEM).map((o) => ({
+    origem: o,
+    leituras: contar('leitura', o),
+    checkins: contar('checkin', o),
+  }));
+  linhas.forEach((l) => { l.conversao = percentual(l.checkins, l.leituras); });
 
-  // data-rotulo: no celular o CSS mostra esse nome em cima de cada número
-  const linhas = origens.map((o) => {
-    const ehCampea = temCampea && o === campea;
-    return `
-      <div class="origem ${ehCampea ? 'origem-campea' : ''}">
-        <div class="origem-nome">${NOMES_ORIGEM[o]} ${ehCampea ? '<span class="selo">Campeã</span>' : ''}</div>
-        <div class="origem-valor" data-rotulo="Leituras">${contar('leitura', o)}</div>
-        <div class="origem-valor" data-rotulo="Check-ins">${contar('checkin', o)}</div>
-        <div class="origem-valor" data-rotulo="Conversão">${percentual(contar('checkin', o), contar('leitura', o))}%</div>
-      </div>
-    `;
-  }).join('');
+  const maior = Math.max(...linhas.map((l) => l.checkins));
+  const lideres = linhas.filter((l) => l.checkins === maior && maior > 0);
+  const campea = lideres.length === 1 ? lideres[0] : null; // empate: ninguém é campeã
 
-  areaOrigem.innerHTML = `
-    <div class="origens">
-      <div class="origem origem-cabecalho">
-        <div>Peça</div><div>Leituras</div><div>Check-ins</div><div>Conversão</div>
-      </div>
-      ${linhas}
+  // A leitura rápida: calculada pelo código, a partir dos números (não pela IA)
+  if (totalCheckins === 0) {
+    areaInsight.textContent = 'Ainda não há check-ins nesta campanha. Os números aparecem aqui assim que os clientes usarem o QR.';
+  } else if (campea) {
+    areaInsight.innerHTML = `<b>${NOMES_ORIGEM[campea.origem]}</b> trouxe ${percentual(campea.checkins, totalCheckins)}% dos check-ins desta campanha, com ${campea.conversao}% de conversão.`;
+  } else {
+    areaInsight.textContent = 'Duas peças empatam em check-ins nesta campanha.';
+  }
+
+  areaOrigem.innerHTML = `<div class="pecas-barras">${linhas.map((l) => `
+    <div class="peca-barra ${l === campea ? 'peca-barra-campea' : ''}">
+      <div class="peca-barra-nome">${NOMES_ORIGEM[l.origem]}${l === campea ? ' <span class="selo">Campeã</span>' : ''}</div>
+      <div class="barra"><span style="width: ${maior ? Math.round((l.checkins / maior) * 100) : 0}%"></span></div>
+      <div class="peca-barra-valor"><b>${l.checkins}</b> check-ins · ${l.conversao}% de ${l.leituras} leituras</div>
+    </div>`).join('')}
+  </div>`;
+}
+
+// Gráfico de colunas com os check-ins de cada dia (até 14 dias, desde o início da campanha)
+function mostrarPorDia(eventos, campanha) {
+  const DIA = 24 * 60 * 60 * 1000;
+  const hoje = inicioDoDia(new Date());
+  const fim = campanha.encerrada_em ? inicioDoDia(new Date(campanha.encerrada_em)) : hoje;
+  const inicioCampanha = inicioDoDia(new Date(campanha.criada_em));
+  const inicio = new Date(Math.max(inicioCampanha, fim - 13 * DIA));
+
+  const dias = [];
+  for (let d = inicio.getTime(); d <= fim.getTime(); d += DIA) {
+    dias.push({ data: new Date(d), checkins: 0 });
+  }
+  eventos.filter((e) => e.tipo === 'checkin').forEach((e) => {
+    const indice = Math.round((inicioDoDia(new Date(e.criado_em)) - inicio) / DIA);
+    if (dias[indice]) dias[indice].checkins++;
+  });
+
+  const maior = Math.max(1, ...dias.map((d) => d.checkins));
+  const total = dias.reduce((soma, d) => soma + d.checkins, 0);
+  const curto = (data) => data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+  areaPorDia.innerHTML = `
+    <div class="colunas-dia" role="img" aria-label="${total} check-ins entre ${curto(dias[0].data)} e ${curto(dias[dias.length - 1].data)}">
+      ${dias.map((d) => `
+        <div class="coluna-dia" title="${curto(d.data)}: ${d.checkins} check-ins">
+          <span class="coluna-valor">${d.checkins || ''}</span>
+          <span class="coluna" style="height: ${Math.round((d.checkins / maior) * 100)}%"></span>
+          <span class="coluna-data">${curto(d.data)}</span>
+        </div>`).join('')}
     </div>
   `;
+}
+
+function inicioDoDia(data) {
+  const d = new Date(data);
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
 
 // Uma linha por campanha: mostra qual benefício trouxe mais gente ao salão
@@ -548,23 +649,14 @@ function mostrarComparacao(todos) {
   `;
 }
 
-function cartaoMetrica(rotulo, valor, nota = '', destaque = false) {
+// Um cartão de número. Com "barra", mostra a etapa do funil em relação às leituras.
+function kpi(rotulo, valor, nota, barra = null, destaque = false) {
   return `
-    <div class="metrica ${destaque ? 'metrica-destaque' : ''}">
-      <p class="metrica-rotulo">${rotulo}</p>
-      <p class="metrica-valor">${valor}</p>
-      ${nota ? `<p class="metrica-nota">${nota}</p>` : ''}
-    </div>
-  `;
-}
-
-// mostrarPercentual = false na primeira barra, que é sempre 100%
-function barra(rotulo, valor, total, mostrarPercentual = true) {
-  const pct = mostrarPercentual ? ` <span class="barra-pct">· ${percentual(valor, total)}%</span>` : '';
-  return `
-    <div class="barra-linha">
-      <div class="barra-rotulo"><span>${rotulo}</span><strong>${valor}${pct}</strong></div>
-      <div class="barra"><span style="width: ${percentual(valor, total)}%"></span></div>
+    <div class="kpi ${destaque ? 'kpi-destaque' : ''}">
+      <p class="kpi-rotulo">${rotulo}</p>
+      <p class="kpi-valor">${valor}</p>
+      <p class="kpi-nota">${nota}</p>
+      ${barra !== null ? `<div class="barra kpi-barra"><span style="width: ${barra}%"></span></div>` : ''}
     </div>
   `;
 }

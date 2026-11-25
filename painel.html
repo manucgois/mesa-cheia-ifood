@@ -22,7 +22,56 @@
   <main class="container container-largo">
     <section id="dados" class="card">Carregando...</section>
 
-    <section id="campanha" class="card" hidden>
+    <!-- Abas: cada uma mostra uma tarefa do dono -->
+    <nav id="abas" class="abas" role="tablist" aria-label="Seções do painel" hidden>
+      <button class="aba-botao" role="tab" id="aba-btn-resultados" data-aba="resultados" aria-controls="aba-resultados">Resultados</button>
+      <button class="aba-botao" role="tab" id="aba-btn-campanha" data-aba="campanha" aria-controls="aba-campanha">Campanha <span id="aba-pendente" class="aba-alerta" hidden>pendente</span></button>
+      <button class="aba-botao" role="tab" id="aba-btn-materiais" data-aba="materiais" aria-controls="aba-materiais">Materiais</button>
+    </nav>
+
+    <!-- Aba 1: Resultados -->
+    <div id="aba-resultados" class="aba" role="tabpanel" aria-labelledby="aba-btn-resultados" hidden>
+      <section id="resultados" class="card">
+        <div class="resultados-topo">
+          <div>
+            <h2>Resultados do Comer Fora</h2>
+            <p id="resultados-campanha" class="resultados-campanha"></p>
+          </div>
+          <p class="dica ao-vivo">● Atualiza sozinho a cada 10 segundos</p>
+        </div>
+
+        <div id="sem-resultados" class="vazio" hidden>
+          <p>Ainda não há campanha para medir.</p>
+          <button type="button" class="botao ir-campanha">Criar a primeira campanha</button>
+        </div>
+
+        <div id="com-resultados">
+          <div id="metricas" class="kpis"></div>
+          <p id="insight" class="insight"></p>
+
+          <div class="resultados-detalhe">
+            <div>
+              <h3 class="subtitulo">Check-ins por peça do kit</h3>
+              <div id="por-origem"></div>
+            </div>
+            <div>
+              <h3 class="subtitulo">Check-ins por dia</h3>
+              <div id="por-dia"></div>
+            </div>
+          </div>
+
+          <div id="comparacao-bloco" hidden>
+            <h3 class="subtitulo">Comparação entre campanhas</h3>
+            <p class="dica">Conversão = check-ins ÷ leituras. Compare benefícios que ficaram no ar por tempo parecido.</p>
+            <div id="comparacao" class="espaco"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Aba 2: Campanha (benefício + kit da IA) -->
+    <div id="aba-campanha" class="aba" role="tabpanel" aria-labelledby="aba-btn-campanha" hidden>
+    <section id="campanha" class="card">
       <h2>Campanha do Comer Fora</h2>
       <div id="campanha-atual"></div>
 
@@ -81,75 +130,52 @@
       <p id="campanha-mensagem" class="mensagem"></p>
     </section>
 
-    <section id="resultados" class="card" hidden>
-      <h2>Resultados do Comer Fora</h2>
-      <p id="resultados-campanha"></p>
-      <p class="dica">Atualiza sozinho a cada 10 segundos.</p>
+    <section id="kit" class="card" hidden>
+      <h2>Kit de divulgação</h2>
+      <p class="dica">A IA escreve, você revisa e aprova.</p>
+      <p id="kit-status" class="espaco"></p>
 
-      <div id="metricas" class="metricas"></div>
+      <button id="botao-gerar" class="botao">Gerar kit com IA</button>
 
-      <div class="resultados-detalhe">
-        <div>
-          <h3 class="subtitulo">Funil do cliente</h3>
-          <div id="funil"></div>
-        </div>
-        <div>
-          <h3 class="subtitulo">Desempenho por peça do kit</h3>
-          <div id="por-origem"></div>
-        </div>
-      </div>
+      <div id="kit-campos" hidden>
+        <label for="titulo_cartaz">Título do cartaz de mesa</label>
+        <input id="titulo_cartaz" maxlength="40">
 
-      <div id="comparacao-bloco" hidden>
-        <h3 class="subtitulo">Comparação entre campanhas</h3>
-        <p class="dica">Conversão = check-ins ÷ leituras. Compare benefícios que ficaram no ar por tempo parecido.</p>
-        <div id="comparacao" class="espaco"></div>
-      </div>
-    </section>
+        <label for="texto_cartaz">Texto do cartaz</label>
+        <textarea id="texto_cartaz" maxlength="180"></textarea>
 
-    <div class="duas-colunas">
-      <section id="kit" class="card" hidden>
-        <h2>Kit de divulgação</h2>
-        <p class="dica">A IA escreve, você revisa e aprova.</p>
-        <p id="kit-status" class="espaco"></p>
+        <label for="chamada_qr">Chamada ao lado do QR code</label>
+        <input id="chamada_qr" maxlength="60">
 
-        <button id="botao-gerar" class="botao">Gerar kit com IA</button>
+        <label for="encarte_delivery">Encarte da sacola do delivery</label>
+        <textarea id="encarte_delivery" maxlength="220"></textarea>
 
-        <div id="kit-campos" hidden>
-          <label for="titulo_cartaz">Título do cartaz de mesa</label>
-          <input id="titulo_cartaz" maxlength="40">
-
-          <label for="texto_cartaz">Texto do cartaz</label>
-          <textarea id="texto_cartaz" maxlength="180"></textarea>
-
-          <label for="chamada_qr">Chamada ao lado do QR code</label>
-          <input id="chamada_qr" maxlength="60">
-
-          <label for="encarte_delivery">Encarte da sacola do delivery</label>
-          <textarea id="encarte_delivery" maxlength="220"></textarea>
-
-          <label for="post_redes">Post para redes sociais</label>
-          <textarea id="post_redes" maxlength="300"></textarea>
-
-          <div class="acoes">
-            <button id="botao-rascunho" class="botao secundario">Salvar rascunho</button>
-            <button id="botao-aprovar" class="botao">Aprovar kit</button>
-          </div>
-        </div>
-
-        <p id="kit-mensagem" class="mensagem"></p>
-      </section>
-
-      <section id="materiais" class="card" hidden>
-        <h2>Materiais para o salão e o delivery</h2>
-        <p class="dica">Cada QR code registra de onde o cliente veio.</p>
+        <label for="post_redes">Post para redes sociais</label>
+        <textarea id="post_redes" maxlength="300"></textarea>
 
         <div class="acoes">
-          <button id="botao-imprimir" class="botao">Imprimir materiais</button>
-          <a id="link-teste" class="botao secundario" target="_blank">Testar como cliente</a>
+          <button id="botao-rascunho" class="botao secundario">Salvar rascunho</button>
+          <button id="botao-aprovar" class="botao">Aprovar kit</button>
         </div>
+      </div>
 
-        <div id="pecas" class="pecas"></div>
-      </section>
+      <p id="kit-mensagem" class="mensagem"></p>
+    </section>
+    </div>
+
+    <!-- Aba 3: Materiais para imprimir -->
+    <div id="aba-materiais" class="aba" role="tabpanel" aria-labelledby="aba-btn-materiais" hidden>
+    <section id="materiais" class="card" hidden>
+      <h2>Materiais para o salão e o delivery</h2>
+      <p class="dica">Cada QR code registra de onde o cliente veio. Imprima e distribua no salão e nas sacolas do delivery.</p>
+
+      <div class="acoes">
+        <button id="botao-imprimir" class="botao">Imprimir materiais</button>
+        <a id="link-teste" class="botao secundario" target="_blank">Testar como cliente</a>
+      </div>
+
+      <div id="pecas" class="pecas"></div>
+    </section>
     </div>
   </main>
 
