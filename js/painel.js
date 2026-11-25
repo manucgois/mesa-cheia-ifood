@@ -18,6 +18,9 @@ const secaoResultados = document.getElementById('resultados');
 const areaMetricas = document.getElementById('metricas');
 const areaFunil = document.getElementById('funil');
 const areaOrigem = document.getElementById('por-origem');
+const textoCampanhaResultados = document.getElementById('resultados-campanha');
+const blocoComparacao = document.getElementById('comparacao-bloco');
+const areaComparacao = document.getElementById('comparacao');
 const secaoCampanha = document.getElementById('campanha');
 const areaCampanhaAtual = document.getElementById('campanha-atual');
 const formCampanha = document.getElementById('form-campanha');
@@ -36,6 +39,7 @@ const NOMES_ORIGEM = {
 let restauranteAtual = null; // guardamos para usar o ticket médio
 
 
+let campanhas = [];              // todas as campanhas do restaurante, da mais nova para a mais antiga
 let campanhaAtual = null;        // a campanha ativa (ou null, se não houver)
 let temCampanhaAnterior = false; // já existiu alguma campanha encerrada?
 let kitAtual = null;             // o kit mais recente DA CAMPANHA ATIVA
@@ -97,6 +101,7 @@ async function carregarCampanha() {
     return mostrarMensagemCampanha('Não foi possível carregar a campanha. Recarregue a página.', 'erro');
   }
 
+  campanhas = data;
   campanhaAtual = data.find((c) => c.status === 'ativa') || null;
   temCampanhaAnterior = data.some((c) => c.status === 'encerrada');
   mostrarCampanha();
@@ -427,12 +432,22 @@ document.getElementById('botao-imprimir').addEventListener('click', () => window
 async function carregarResultados() {
   if (document.hidden) return; // aba em segundo plano: não consulta o banco à toa
 
-  const { data: eventos, error } = await supabase
+  if (campanhas.length === 0) return; // ainda não há campanha: nada para medir
+
+  const { data: todos, error } = await supabase
     .from('eventos')
-    .select('tipo, origem, pessoas')
+    .select('tipo, origem, pessoas, campanha_id')
     .eq('restaurante_id', id);
 
   if (error) return console.error(error);
+
+  // Os números principais são da campanha ativa (ou da última, se nenhuma estiver ativa)
+  const foco = campanhaAtual || campanhas[0];
+  const eventos = todos.filter((e) => e.campanha_id === foco.id);
+  textoCampanhaResultados.textContent =
+    `${foco.status === 'ativa' ? 'Campanha atual' : 'Última campanha'}: ${foco.beneficio_tipo}` +
+    `${foco.beneficio ? ' ' + foco.beneficio : ''} · desde ${formatarData(foco.criada_em)}`;
+  mostrarComparacao(todos);
 
   // Conta os eventos de um tipo (e, se informada, de uma origem)
   const contar = (tipo, origem) =>
@@ -485,6 +500,54 @@ async function carregarResultados() {
     <div class="origens">
       <div class="origem origem-cabecalho">
         <div>Peça</div><div>Leituras</div><div>Check-ins</div><div>Conversão</div>
+      </div>
+      ${linhas}
+    </div>
+  `;
+}
+
+// Uma linha por campanha: mostra qual benefício trouxe mais gente ao salão
+function mostrarComparacao(todos) {
+  blocoComparacao.hidden = campanhas.length < 2;
+  if (campanhas.length < 2) return;
+
+  const linhasDados = campanhas.map((c) => {
+    const daCampanha = todos.filter((e) => e.campanha_id === c.id);
+    const leituras = daCampanha.filter((e) => e.tipo === 'leitura').length;
+    const checkins = daCampanha.filter((e) => e.tipo === 'checkin').length;
+    return { c, leituras, checkins, conversao: percentual(checkins, leituras) };
+  });
+
+  // Melhor conversão: só entre campanhas que já tiveram leitura, e só se não houver empate
+  const comLeitura = linhasDados.filter((l) => l.leituras > 0);
+  const maior = Math.max(...comLeitura.map((l) => l.conversao));
+  const lideres = comLeitura.filter((l) => l.conversao === maior);
+  const melhor = comLeitura.length > 1 && lideres.length === 1 ? lideres[0] : null;
+
+  const linhas = linhasDados.map((l) => {
+    const periodo = l.c.encerrada_em
+      ? `${formatarData(l.c.criada_em)} a ${formatarData(l.c.encerrada_em)}`
+      : `desde ${formatarData(l.c.criada_em)}`;
+    const selos =
+      (l.c.status === 'ativa' ? ' <span class="selo">Ativa</span>' : '') +
+      (l === melhor ? ' <span class="selo">Melhor conversão</span>' : '');
+    return `
+      <div class="origem ${l === melhor ? 'origem-campea' : ''}">
+        <div class="origem-nome">
+          ${escapar(l.c.beneficio_tipo)}${selos}
+          <span class="dica" style="display:block; width:100%; font-weight:400">${escapar(l.c.beneficio || '')} · ${periodo}</span>
+        </div>
+        <div class="origem-valor" data-rotulo="Leituras">${l.leituras}</div>
+        <div class="origem-valor" data-rotulo="Check-ins">${l.checkins}</div>
+        <div class="origem-valor" data-rotulo="Conversão">${l.conversao}%</div>
+      </div>
+    `;
+  }).join('');
+
+  areaComparacao.innerHTML = `
+    <div class="origens">
+      <div class="origem origem-cabecalho">
+        <div>Campanha</div><div>Leituras</div><div>Check-ins</div><div>Conversão</div>
       </div>
       ${linhas}
     </div>
