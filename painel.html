@@ -22,6 +22,57 @@
   <main class="container container-largo">
     <section id="dados" class="card">Carregando...</section>
 
+    <section id="campanha" class="card" hidden>
+      <h2>Campanha do Comer Fora</h2>
+      <div id="campanha-atual"></div>
+
+      <form id="form-campanha" hidden>
+        <p id="campanha-aviso" class="aviso" hidden></p>
+
+        <label for="beneficio_tipo">Benefício</label>
+        <select id="beneficio_tipo" name="beneficio_tipo" required>
+          <option value="">Selecione</option>
+          <option>2 por 1</option>
+          <option>Desconto</option>
+          <option>Doce grátis</option>
+          <option>Entrada grátis</option>
+          <option>Bebida grátis</option>
+          <option>Junte selos</option>
+          <option>Cashback</option>
+          <option>R$ 10 no local</option>
+        </select>
+
+        <label for="beneficio">Detalhe do benefício</label>
+        <input id="beneficio" name="beneficio" maxlength="120"
+               placeholder="Ex.: na pizza marguerita grande">
+
+        <label>Dias em que vale</label>
+        <div class="dias">
+          <label><input type="checkbox" name="dias" value="Seg"> Seg</label>
+          <label><input type="checkbox" name="dias" value="Ter"> Ter</label>
+          <label><input type="checkbox" name="dias" value="Qua"> Qua</label>
+          <label><input type="checkbox" name="dias" value="Qui"> Qui</label>
+          <label><input type="checkbox" name="dias" value="Sex"> Sex</label>
+          <label><input type="checkbox" name="dias" value="Sáb"> Sáb</label>
+          <label><input type="checkbox" name="dias" value="Dom"> Dom</label>
+        </div>
+
+        <label for="turno">Turno</label>
+        <select id="turno" name="turno">
+          <option>Almoço</option>
+          <option>Noturno</option>
+          <option>Dia todo</option>
+        </select>
+
+        <div class="acoes">
+          <button type="button" id="botao-cancelar-campanha" class="botao secundario">Cancelar</button>
+          <button type="submit" id="botao-salvar-campanha" class="botao">Criar campanha</button>
+        </div>
+      </form>
+
+      <p id="campanha-mensagem" class="mensagem"></p>
+    </section>
+
     <section id="resultados" class="card" hidden>
       <h2>Resultados do Comer Fora</h2>
       <p class="dica">Atualiza sozinho a cada 10 segundos.</p>

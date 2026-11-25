@@ -18,6 +18,13 @@ const secaoResultados = document.getElementById('resultados');
 const areaMetricas = document.getElementById('metricas');
 const areaFunil = document.getElementById('funil');
 const areaOrigem = document.getElementById('por-origem');
+const secaoCampanha = document.getElementById('campanha');
+const areaCampanhaAtual = document.getElementById('campanha-atual');
+const formCampanha = document.getElementById('form-campanha');
+const campanhaAviso = document.getElementById('campanha-aviso');
+const campanhaMensagem = document.getElementById('campanha-mensagem');
+const botaoSalvarCampanha = document.getElementById('botao-salvar-campanha');
+const botaoCancelarCampanha = document.getElementById('botao-cancelar-campanha');
 
 const NOMES_ORIGEM = {
   mesa: 'Cartaz de mesa',
@@ -29,7 +36,9 @@ const NOMES_ORIGEM = {
 let restauranteAtual = null; // guardamos para usar o ticket médio
 
 
-let kitAtual = null; // o kit mais recente salvo no banco
+let campanhaAtual = null;        // a campanha ativa (ou null, se não houver)
+let temCampanhaAnterior = false; // já existiu alguma campanha encerrada?
+let kitAtual = null;             // o kit mais recente DA CAMPANHA ATIVA
 
 // ---------- Restaurante ----------
 
@@ -50,8 +59,9 @@ async function carregar() {
       <div>
         <h2>${escapar(r.nome)}</h2>
         <p class="dica">${escapar(r.cozinha)}${r.bairro ? ' · ' + escapar(r.bairro) : ''}</p>
-        <p class="espaco"><span class="selo">${escapar(r.beneficio_tipo)}</span> ${escapar(r.beneficio || '')}</p>
-        <p class="dica">${escapar(r.beneficio_dias)} · ${escapar(r.beneficio_turno)}</p>
+        <p class="dica">
+          ${r.ticket_medio ? 'Ticket médio ' + formatarReais(Number(r.ticket_medio)) + ' · ' : ''}Tom ${escapar(r.tom)}
+        </p>
       </div>
       <div class="dados-acoes">
         <button id="botao-copiar" class="botao secundario">Copiar link do painel</button>
@@ -69,11 +79,141 @@ async function carregar() {
   });
 
   restauranteAtual = r;
-  secaoResultados.hidden = false;
-  secaoKit.hidden = false;
-  await carregarKit();
-  await carregarResultados();
+  await carregarCampanha();
   setInterval(carregarResultados, 10000); // atualiza a cada 10 segundos
+}
+
+// ---------- Campanha ----------
+
+async function carregarCampanha() {
+  const { data, error } = await supabase
+    .from('campanhas')
+    .select('*')
+    .eq('restaurante_id', id)
+    .order('criada_em', { ascending: false });
+
+  if (error) {
+    console.error(error);
+    return mostrarMensagemCampanha('Não foi possível carregar a campanha. Recarregue a página.', 'erro');
+  }
+
+  campanhaAtual = data.find((c) => c.status === 'ativa') || null;
+  temCampanhaAnterior = data.some((c) => c.status === 'encerrada');
+  mostrarCampanha();
+
+  // Sem campanha ativa não há kit para gerar nem material para imprimir
+  secaoKit.hidden = !campanhaAtual;
+  secaoResultados.hidden = data.length === 0;
+  if (campanhaAtual) {
+    await carregarKit();
+  } else {
+    kitAtual = null;
+    secaoMateriais.hidden = true;
+  }
+  await carregarResultados();
+}
+
+function mostrarCampanha() {
+  secaoCampanha.hidden = false;
+
+  if (!campanhaAtual) {
+    areaCampanhaAtual.innerHTML = temCampanhaAnterior
+      ? '<p class="dica">Nenhuma campanha ativa. Escolha o novo benefício para voltar a divulgar.</p>'
+      : '<p class="dica">Escolha o benefício do Comer Fora. É ele que a IA vai divulgar nos materiais.</p>';
+    abrirFormulario('criar');
+    return;
+  }
+
+  const c = campanhaAtual;
+  areaCampanhaAtual.innerHTML = `
+    <div class="dados-linha">
+      <div>
+        <p class="espaco"><span class="selo">${escapar(c.beneficio_tipo)}</span> ${escapar(c.beneficio || '')}</p>
+        <p class="dica">${escapar(c.beneficio_dias)} · ${escapar(c.beneficio_turno)} · ativa desde ${formatarData(c.criada_em)}</p>
+      </div>
+      <div class="dados-acoes">
+        <button id="botao-trocar" class="botao secundario">Trocar benefício</button>
+      </div>
+    </div>
+  `;
+  formCampanha.hidden = true;
+  document.getElementById('botao-trocar').addEventListener('click', () => abrirFormulario('trocar'));
+}
+
+// modo 'criar': primeira campanha (ou depois de uma falha); modo 'trocar': encerra a atual e cria outra
+function abrirFormulario(modo) {
+  formCampanha.reset();
+  formCampanha.dataset.modo = modo;
+  formCampanha.hidden = false;
+  mostrarMensagemCampanha('', '');
+
+  const trocando = modo === 'trocar';
+  botaoSalvarCampanha.textContent = trocando ? 'Confirmar troca' : 'Criar campanha';
+  botaoCancelarCampanha.hidden = !trocando;
+  campanhaAviso.hidden = !trocando;
+  campanhaAviso.textContent = trocando
+    ? 'Ao confirmar, a campanha atual é encerrada e os números dela ficam guardados. ' +
+      'Os QR codes já impressos continuam funcionando e passam a mostrar o novo benefício, ' +
+      'mas o texto impresso fala do benefício antigo: gere e aprove o novo kit e reimprima os materiais.'
+    : '';
+
+  const botaoTrocar = document.getElementById('botao-trocar');
+  if (botaoTrocar) botaoTrocar.hidden = trocando;
+}
+
+botaoCancelarCampanha.addEventListener('click', () => mostrarCampanha());
+
+formCampanha.addEventListener('submit', async (evento) => {
+  evento.preventDefault();
+
+  const dias = [...formCampanha.querySelectorAll('input[name="dias"]:checked')]
+    .map((caixa) => caixa.value);
+  if (dias.length === 0) {
+    return mostrarMensagemCampanha('Escolha pelo menos um dia para o benefício.', 'erro');
+  }
+
+  const campos = formCampanha.elements;
+  const nova = {
+    restaurante_id: id,
+    beneficio_tipo: campos.beneficio_tipo.value,
+    beneficio: campos.beneficio.value.trim() || null,
+    beneficio_dias: dias.join(', '),
+    beneficio_turno: campos.turno.value,
+  };
+
+  botaoSalvarCampanha.disabled = true;
+
+  // 1. Encerra a campanha atual. Precisa vir antes: o banco só aceita UMA ativa por restaurante.
+  //    Nada é apagado: a campanha fica guardada, com os eventos e o kit dela.
+  if (campanhaAtual) {
+    const { error } = await supabase
+      .from('campanhas')
+      .update({ status: 'encerrada', encerrada_em: new Date().toISOString() })
+      .eq('id', campanhaAtual.id);
+    if (error) {
+      console.error(error);
+      botaoSalvarCampanha.disabled = false;
+      return mostrarMensagemCampanha('Não foi possível encerrar a campanha atual. Tente de novo.', 'erro');
+    }
+  }
+
+  // 2. Cria a nova campanha
+  const { error } = await supabase.from('campanhas').insert(nova);
+  botaoSalvarCampanha.disabled = false;
+  if (error) {
+    console.error(error);
+    await carregarCampanha(); // mostra o estado real do banco (sem ativa, se o passo 1 funcionou)
+    return mostrarMensagemCampanha('Não foi possível criar a campanha. Tente de novo.', 'erro');
+  }
+
+  mostrarMensagem('', ''); // apaga a mensagem do kit da campanha anterior
+  await carregarCampanha();
+  mostrarMensagemCampanha('Campanha criada! Agora gere o kit de divulgação com IA.', 'ok');
+});
+
+function mostrarMensagemCampanha(texto, tipo) {
+  campanhaMensagem.textContent = texto;
+  campanhaMensagem.className = 'mensagem ' + tipo;
 }
 
 function mostrarNaoEncontrado() {
@@ -86,12 +226,16 @@ async function carregarKit() {
   const { data } = await supabase
     .from('kits')
     .select('*')
-    .eq('restaurante_id', id)
+    .eq('campanha_id', campanhaAtual.id) // só o kit da campanha ativa
     .order('criado_em', { ascending: false })
     .limit(1);
 
   kitAtual = data && data.length > 0 ? data[0] : null;
-  if (kitAtual) preencherCampos(kitAtual);
+  if (kitAtual) {
+    preencherCampos(kitAtual);
+  } else {
+    limparCampos(); // campanha nova: os textos da anterior não servem mais
+  }
   mostrarStatus();
   mostrarMateriais();
 }
@@ -120,7 +264,8 @@ botaoGerar.addEventListener('click', async () => {
     }
     if (!resposta.ok) throw new Error(resultado.erro || 'Erro ao gerar o kit.');
 
-    // 2. Guarda como rascunho no banco
+    // 2. Guarda como rascunho no banco. O resultado já traz o campanha_id
+    //    da campanha que a IA usou (o servidor é quem decide qual é a ativa).
     const { data, error } = await supabase
       .from('kits')
       .insert({ restaurante_id: id, ...resultado, status: 'rascunho' })
@@ -181,6 +326,14 @@ function preencherCampos(kit) {
   botaoGerar.textContent = 'Gerar nova versão com IA';
 }
 
+function limparCampos() {
+  CAMPOS.forEach((campo) => {
+    document.getElementById(campo).value = '';
+  });
+  kitCampos.hidden = true;
+  botaoGerar.textContent = 'Gerar kit com IA';
+}
+
 function lerCampos() {
   const textos = {};
   CAMPOS.forEach((campo) => {
@@ -190,7 +343,9 @@ function lerCampos() {
 }
 
 function mostrarStatus() {
-  if (!kitAtual) {
+  if (!kitAtual && temCampanhaAnterior) {
+    kitStatus.innerHTML = '<span class="aviso" style="display:block">Benefício novo: gere e aprove o kit desta campanha e reimprima os materiais. Os impressos atuais falam da campanha anterior.</span>';
+  } else if (!kitAtual) {
     kitStatus.innerHTML = '';
   } else if (kitAtual.status === 'aprovado') {
     kitStatus.innerHTML = '<span class="selo">Aprovado</span>';
@@ -359,6 +514,10 @@ function barra(rotulo, valor, total, mostrarPercentual = true) {
 
 function percentual(parte, total) {
   return total ? Math.round((parte / total) * 100) : 0;
+}
+
+function formatarData(iso) {
+  return new Date(iso).toLocaleDateString('pt-BR');
 }
 
 function formatarReais(valor) {

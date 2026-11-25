@@ -46,8 +46,16 @@ module.exports = async function handler(req, res) {
     if (!restaurante) {
       return res.status(404).json({ erro: 'Restaurante não encontrado.' });
     }
-    const kit = await gerarComGemini(restaurante);
-    return res.status(200).json(kit);
+    const campanha = await buscarCampanhaAtiva(restaurante_id);
+    if (!campanha) {
+      return res.status(400).json({ erro: 'Crie uma campanha antes de gerar o kit.' });
+    }
+
+    // A IA recebe os dados do restaurante + o benefício da campanha ativa
+    const kit = await gerarComGemini({ ...restaurante, ...campanha });
+
+    // Devolve junto o id da campanha usada: o kit fica ligado a ela no banco
+    return res.status(200).json({ ...kit, campanha_id: campanha.id });
   } catch (erro) {
     console.error(erro);
     if (erro.name === 'TimeoutError') {
@@ -70,6 +78,21 @@ async function buscarRestaurante(id) {
   });
   if (!resposta.ok) {
     throw new Error('Erro ao ler o restaurante: ' + resposta.status);
+  }
+  const linhas = await resposta.json();
+  return linhas[0] || null;
+}
+
+// Lê a campanha ativa do restaurante (no máximo uma, garantido pelo banco)
+async function buscarCampanhaAtiva(restauranteId) {
+  const url = `${process.env.SUPABASE_URL}/rest/v1/campanhas` +
+    `?restaurante_id=eq.${restauranteId}&status=eq.ativa` +
+    `&select=id,beneficio_tipo,beneficio,beneficio_dias,beneficio_turno`;
+  const resposta = await fetch(url, {
+    headers: { apikey: process.env.SUPABASE_KEY },
+  });
+  if (!resposta.ok) {
+    throw new Error('Erro ao ler a campanha: ' + resposta.status);
   }
   const linhas = await resposta.json();
   return linhas[0] || null;
