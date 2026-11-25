@@ -91,7 +91,8 @@ async function gerarComGemini(restaurante) {
       } catch (erro) {
         ultimoErro = erro;
         if (!ERROS_TEMPORARIOS.includes(erro.status)) {
-          throw erro; // erro permanente (chave errada, pedido inválido): não adianta repetir
+          console.warn(`Modelo ${modelo} falhou com erro ${erro.status}; passando para o próximo.`);
+          break; // erro permanente neste modelo: não repete, mas tenta o próximo da lista
         }
         console.warn(`Modelo ${modelo} indisponível (${erro.status}), tentativa ${tentativa}.`);
         await esperar(1500 * tentativa); // espera 1,5 s e depois 3 s
