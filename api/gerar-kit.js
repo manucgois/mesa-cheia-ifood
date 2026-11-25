@@ -87,7 +87,7 @@ async function buscarRestaurante(id) {
 async function buscarCampanhaAtiva(restauranteId) {
   const url = `${process.env.SUPABASE_URL}/rest/v1/campanhas` +
     `?restaurante_id=eq.${restauranteId}&status=eq.ativa` +
-    `&select=id,beneficio_tipo,beneficio,beneficio_dias,beneficio_turno`;
+    `&select=id,beneficio_tipo,beneficio,beneficio_dias,beneficio_turno,tom`;
   const resposta = await fetch(url, {
     headers: { apikey: process.env.SUPABASE_KEY },
   });
@@ -135,7 +135,8 @@ function montarCorpo(r) {
     `Detalhe do benefício: ${r.beneficio || 'não informado'}`,
     `Dias: ${r.beneficio_dias}`,
     `Turno: ${r.beneficio_turno}`,
-    `Tom: ${r.tom}`,
+    `Cidade: ${r.cidade || 'não informada'}`,
+    `Tom: ${r.tom || 'acolhedor'}`,
   ].join('\n');
 
   return {

@@ -57,30 +57,23 @@ async function carregar() {
 
   if (error || !r) return mostrarNaoEncontrado();
 
-  // Informações à esquerda e o botão de copiar à direita (no celular, um embaixo do outro)
+  // Dados que já vêm do cadastro do restaurante no iFood: o dono não digita nada aqui
+  const local = [r.bairro, r.cidade].filter(Boolean).map(escapar).join(', ');
   areaDados.innerHTML = `
     <div class="dados-linha">
       <div>
         <h2>${escapar(r.nome)}</h2>
-        <p class="dica">${escapar(r.cozinha)}${r.bairro ? ' · ' + escapar(r.bairro) : ''}</p>
+        <p class="dica">${escapar(r.cozinha)}${local ? ' · ' + local : ''}</p>
         <p class="dica">
-          ${r.ticket_medio ? 'Ticket médio ' + formatarReais(Number(r.ticket_medio)) + ' · ' : ''}Tom ${escapar(r.tom)}
+          ${r.ticket_medio ? 'Ticket médio por pessoa ' + formatarReais(Number(r.ticket_medio)) + ' · ' : ''}dados do seu cadastro no iFood
         </p>
       </div>
       <div class="dados-acoes">
-        <button id="botao-copiar" class="botao secundario">Copiar link do painel</button>
-        <p class="dica">Guarde este link: é o acesso ao seu painel.</p>
+        <a href="index.html#entrar" class="botao secundario">Trocar de loja</a>
+        <p class="dica">Simulação do login do Portal do Parceiro.</p>
       </div>
     </div>
   `;
-  document.getElementById('botao-copiar').addEventListener('click', async (evento) => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      evento.target.textContent = 'Link copiado!';
-    } catch {
-      evento.target.textContent = 'Copie o endereço na barra do navegador';
-    }
-  });
 
   restauranteAtual = r;
   await carregarCampanha();
@@ -134,7 +127,7 @@ function mostrarCampanha() {
     <div class="dados-linha">
       <div>
         <p class="espaco"><span class="selo">${escapar(c.beneficio_tipo)}</span> ${escapar(c.beneficio || '')}</p>
-        <p class="dica">${escapar(c.beneficio_dias)} · ${escapar(c.beneficio_turno)} · ativa desde ${formatarData(c.criada_em)}</p>
+        <p class="dica">${escapar(c.beneficio_dias)} · ${escapar(c.beneficio_turno)}${c.tom ? ' · tom ' + escapar(c.tom) : ''} · ativa desde ${formatarData(c.criada_em)}</p>
       </div>
       <div class="dados-acoes">
         <button id="botao-trocar" class="botao secundario">Trocar benefício</button>
@@ -184,6 +177,7 @@ formCampanha.addEventListener('submit', async (evento) => {
     beneficio: campos.beneficio.value.trim() || null,
     beneficio_dias: dias.join(', '),
     beneficio_turno: campos.turno.value,
+    tom: campos.tom.value, // cada campanha pode ter um tom diferente
   };
 
   botaoSalvarCampanha.disabled = true;
@@ -222,7 +216,7 @@ function mostrarMensagemCampanha(texto, tipo) {
 }
 
 function mostrarNaoEncontrado() {
-  areaDados.innerHTML = '<p class="erro">Restaurante não encontrado. <a href="index.html">Cadastre-se</a>.</p>';
+  areaDados.innerHTML = '<p class="erro">Restaurante não encontrado. <a href="index.html#entrar">Buscar minha loja</a>.</p>';
 }
 
 // ---------- Kit ----------
@@ -468,7 +462,7 @@ async function carregarResultados() {
     ${cartaoMetrica('Conversão', percentual(checkins, leituras) + '%', 'check-ins ÷ leituras', true)}
     ${cartaoMetrica('Pessoas atendidas', pessoas)}
     ${cartaoMetrica('Faturamento estimado', ticket ? formatarReais(pessoas * ticket) : '—',
-        ticket ? 'pessoas × ticket médio' : 'informe o ticket médio no cadastro')}
+        ticket ? 'pessoas × ticket médio' : 'ticket médio indisponível')}
   `;
 
   areaFunil.innerHTML = `

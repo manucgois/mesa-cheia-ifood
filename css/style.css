@@ -217,6 +217,22 @@ a.botao { display: block; text-align: center; text-decoration: none; }
 
 .rodape-nota { text-align: center; color: var(--cinza); font-size: 13px; margin: 8px 16px 40px; }
 
+.lista-restaurantes { display: grid; gap: 10px; margin-top: 16px; }
+.restaurante-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--texto);
+}
+.restaurante-item:hover { border-color: var(--vermelho); background: #FFF8F8; }
+.restaurante-item strong { display: block; }
+.restaurante-entrar { color: var(--vermelho); font-weight: 600; white-space: nowrap; }
+
 /* =========================================================
    Painel do restaurante
    ========================================================= */

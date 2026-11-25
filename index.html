@@ -13,7 +13,7 @@
         <span class="logo-icone">MC</span>
         <span>
           <span class="logo-nome">Mesa Cheia</span>
-          <span class="logo-sub">Para restaurantes parceiros</span>
+          <span class="logo-sub">Comer Fora · protótipo</span>
         </span>
       </a>
     </div>
@@ -21,12 +21,12 @@
 
   <section class="hero">
     <div class="hero-conteudo">
-      <span class="hero-selo">Comer Fora · iFood</span>
+      <span class="hero-selo">Comer Fora · Portal do Parceiro</span>
       <h2>Leve quem pede delivery para o seu salão</h2>
-      <p>A IA cria o kit de divulgação do Comer Fora do seu restaurante. Você revisa, imprime e acompanha quantos clientes cada peça trouxe.</p>
+      <p>Uma função dentro do iFood: sua loja já está cadastrada, você só escolhe o benefício. A IA cria o kit de divulgação e o painel mostra quantos clientes cada peça trouxe.</p>
       <div class="hero-acoes">
-        <a class="botao botao-branco" href="painel.html?r=11111111-1111-4111-8111-111111111111">Ver demonstração</a>
-        <a class="botao botao-contorno-branco" href="#form-cadastro">Cadastrar meu restaurante</a>
+        <a class="botao botao-branco" href="#entrar">Entrar com minha loja</a>
+        <a class="botao botao-contorno-branco" href="painel.html?r=11111111-1111-4111-8111-111111111111">Ver demonstração</a>
       </div>
     </div>
   </section>
@@ -34,13 +34,13 @@
   <section class="passos-cards">
     <div class="passo">
       <div class="passo-numero">1</div>
-      <h3>Cadastre</h3>
-      <p>O restaurante, o ticket médio e o tom da sua comunicação.</p>
+      <h3>Entre com sua loja</h3>
+      <p>Nome, cozinha, endereço e ticket médio já vêm do seu cadastro no iFood.</p>
     </div>
     <div class="passo">
       <div class="passo-numero">2</div>
       <h3>Crie a campanha</h3>
-      <p>Escolha o benefício e a IA gera cartaz, display, encarte da sacola e post. Trocou a estratégia? Crie outra.</p>
+      <p>Escolha o benefício e o tom. A IA gera cartaz, display, encarte da sacola e post. Trocou a estratégia? Crie outra.</p>
     </div>
     <div class="passo">
       <div class="passo-numero">3</div>
@@ -50,47 +50,21 @@
   </section>
 
   <main class="container">
-    <form id="form-cadastro" class="card">
-      <h2>Cadastre seu restaurante</h2>
+    <section id="entrar" class="card">
+      <h2>Entrar com sua loja do iFood</h2>
+      <p class="aviso">Simulação do login. No produto real, o restaurante já estaria logado no Portal do Parceiro e esta seria uma aba dele. Os restaurantes abaixo são fictícios.</p>
 
-      <label for="nome">Nome do restaurante</label>
-      <input id="nome" name="nome" required maxlength="80">
+      <label for="busca">Busque pelo nome do restaurante ou pela cidade</label>
+      <input id="busca" type="search" placeholder="Ex.: Brasa ou São Paulo" autocomplete="off">
 
-      <label for="cozinha">Tipo de cozinha</label>
-      <select id="cozinha" name="cozinha" required>
-        <option value="">Selecione</option>
-        <option>Pizza</option>
-        <option>Hambúrguer</option>
-        <option>Japonesa</option>
-        <option>Brasileira</option>
-        <option>Italiana</option>
-        <option>Árabe</option>
-        <option>Doces e sobremesas</option>
-        <option>Outra</option>
-      </select>
-
-      <label for="bairro">Bairro</label>
-      <input id="bairro" name="bairro" maxlength="60">
-
-      <label for="ticket">Ticket médio por pessoa (R$)</label>
-      <input id="ticket" name="ticket" type="number" min="1" step="0.01">
-
-      <label for="tom">Tom da comunicação</label>
-      <select id="tom" name="tom">
-        <option value="acolhedor">Acolhedor</option>
-        <option value="descontraído">Descontraído</option>
-        <option value="sofisticado">Sofisticado</option>
-        <option value="familiar">Familiar</option>
-      </select>
-
-      <button class="botao" type="submit" id="botao-salvar">Cadastrar restaurante</button>
-      <p class="dica centro espaco">Em seguida você acessa o seu painel para criar a campanha.</p>
-      <p id="mensagem" class="mensagem"></p>
-    </form>
+      <div id="lista-restaurantes" class="lista-restaurantes">
+        <p class="dica espaco">Carregando restaurantes...</p>
+      </div>
+    </section>
   </main>
 
   <p class="rodape-nota">Protótipo para o case GenAI iFood · dados fictícios</p>
 
-  <script type="module" src="js/cadastro.js"></script>
+  <script type="module" src="js/entrar.js"></script>
 </body>
 </html>
