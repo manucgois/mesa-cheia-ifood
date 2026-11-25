@@ -16,8 +16,6 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; scroll-padding-top: 84px; }
-
 body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   background: var(--fundo);
@@ -30,7 +28,6 @@ a { color: var(--vermelho); }
 /* ---------- Cabeçalho ---------- */
 /* No celular o cabeçalho rola junto (ocuparia muito da tela); fixo só a partir de 600px */
 @media (max-width: 599px) {
-  html { scroll-padding-top: 16px; }
   .topo { position: static !important; }
 }
 .topo {
@@ -66,16 +63,6 @@ a { color: var(--vermelho); }
 .logo-nome { display: block; font-size: 18px; font-weight: 700; line-height: 1.1; }
 .logo-sub { display: block; font-size: 12px; opacity: 0.9; }
 
-.navegacao { display: flex; gap: 4px; }
-.navegacao a {
-  color: #fff;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 999px;
-}
-.navegacao a:hover { background: rgba(255, 255, 255, 0.18); }
 
 /* ---------- Estrutura ---------- */
 .container { max-width: 720px; margin: 24px auto; padding: 0 16px; }

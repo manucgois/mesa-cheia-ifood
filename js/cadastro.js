@@ -30,7 +30,7 @@ form.addEventListener('submit', async (evento) => {
   };
 
   botao.disabled = true;
-  botao.textContent = 'Criando...';
+  botao.textContent = 'Cadastrando...';
 
   // Grava no banco e devolve o id criado
   const { data, error } = await supabase
@@ -43,7 +43,7 @@ form.addEventListener('submit', async (evento) => {
     console.error(error);
     mostrarErro('Não foi possível salvar. Tente de novo.');
     botao.disabled = false;
-    botao.textContent = 'Criar meu painel';
+    botao.textContent = 'Cadastrar restaurante';
     return;
   }
 
