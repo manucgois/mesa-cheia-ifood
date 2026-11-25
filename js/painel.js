@@ -50,8 +50,17 @@ async function carregar() {
     <p class="espaco"><span class="selo">${escapar(r.beneficio_tipo)}</span></p>
     <p>${escapar(r.beneficio || '')}</p>
     <p class="dica">${escapar(r.beneficio_dias)} · ${escapar(r.beneficio_turno)}</p>
-    <p class="dica espaco">Guarde o link desta página: é o seu painel.</p>
+    <button id="botao-copiar" class="botao secundario">Copiar link do painel</button>
+    <p class="dica espaco">Guarde este link: é o acesso ao seu painel.</p>
   `;
+    document.getElementById('botao-copiar').addEventListener('click', async (evento) => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      evento.target.textContent = 'Link copiado!';
+    } catch {
+      evento.target.textContent = 'Copie o endereço na barra do navegador';
+    }
+  });
 
   restauranteAtual = r;
   secaoResultados.hidden = false;
@@ -207,8 +216,8 @@ function mostrarMateriais() {
   linkTeste.href = base + 'mesa';
 
   areaPecas.innerHTML = `
-    <div class="peca">
-      <p class="peca-tipo">Cartaz de mesa</p>
+    <div class="peca peca-pequena">
+      <p class="peca-tipo">Display de balcão</p>
       <h3>${escapar(kitAtual.titulo_cartaz)}</h3>
       <p>${escapar(kitAtual.texto_cartaz)}</p>
       <div class="qr">${gerarQr(base + 'mesa')}</div>
