@@ -216,8 +216,8 @@ function mostrarMateriais() {
   linkTeste.href = base + 'mesa';
 
   areaPecas.innerHTML = `
-    <div class="peca peca-pequena">
-      <p class="peca-tipo">Display de balcão</p>
+    <div class="peca">
+      <p class="peca-tipo">Cartaz de mesa</p>
       <h3>${escapar(kitAtual.titulo_cartaz)}</h3>
       <p>${escapar(kitAtual.texto_cartaz)}</p>
       <div class="qr">${gerarQr(base + 'mesa')}</div>
@@ -225,7 +225,7 @@ function mostrarMateriais() {
       <p class="peca-marca">iFood pra comer fora</p>
     </div>
 
-    <div class="peca">
+    <div class="peca peca-pequena">
       <p class="peca-tipo">Display de balcão</p>
       <h3>${escapar(kitAtual.titulo_cartaz)}</h3>
       <div class="qr">${gerarQr(base + 'balcao')}</div>

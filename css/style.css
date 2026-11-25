@@ -140,7 +140,7 @@ a.botao { display: block; text-align: center; text-decoration: none; }
 /* ---------- Impressão: só os materiais ---------- */
 @media print {
   body { background: #fff; }
-  .topo, #dados, #kit, #materiais > h2, #materiais > .dica,
+  .topo, #dados, #kit, #resultados, #materiais > h2, #materiais > .dica,
   #materiais .acoes, .nao-imprimir { display: none !important; }
   .card { border: none; padding: 0; }
   .peca { border: 2px dashed #999; break-inside: avoid; page-break-inside: avoid; margin-bottom: 24px; }
