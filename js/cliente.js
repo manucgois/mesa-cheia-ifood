@@ -31,22 +31,42 @@ async function iniciar() {
 }
 
 function mostrarRestaurante(r) {
+  // Avatar: a primeira letra do nome, no lugar da foto que o restaurante teria no app
+  const inicial = r.nome.trim().charAt(0).toUpperCase();
+
   area.innerHTML = `
-    <p class="marca">iFood pra comer fora</p>
-    <h1>${escapar(r.nome)}</h1>
-    <p class="dica">${escapar(r.cozinha)}${r.bairro ? ' · ' + escapar(r.bairro) : ''}</p>
+    <header class="cliente-banner">
+      <div class="cliente-banner-conteudo">
+        <p class="marca-branca">iFood pra comer fora</p>
+        <div class="cliente-restaurante">
+          <div class="avatar">${escapar(inicial)}</div>
+          <div>
+            <h1>${escapar(r.nome)}</h1>
+            <p class="sub">${escapar(r.cozinha)}${r.bairro ? ' · ' + escapar(r.bairro) : ''}</p>
+          </div>
+        </div>
+      </div>
+    </header>
 
-    <div class="beneficio">
-      <p class="dica">Benefício pra você</p>
-      <p class="beneficio-tipo">${escapar(r.beneficio_tipo)}</p>
-      <p>${escapar(r.beneficio || '')}</p>
-      <p class="espaco">
-        <span class="chip">${escapar(r.beneficio_dias)}</span>
-        <span class="chip">${escapar(r.beneficio_turno)}</span>
-      </p>
-    </div>
+    <main class="cliente-container">
+      <div class="beneficio">
+        <p class="dica">Benefício pra você</p>
+        <p class="beneficio-tipo">${escapar(r.beneficio_tipo)}</p>
+        <p>${escapar(r.beneficio || '')}</p>
+        <p class="espaco">
+          <span class="chip">${escapar(r.beneficio_dias)}</span>
+          <span class="chip">${escapar(r.beneficio_turno)}</span>
+        </p>
+        <div id="acoes"></div>
+      </div>
 
-    <div id="acoes"></div>
+      <p class="como-funciona-titulo">Como funciona</p>
+      <ol class="como-funciona">
+        <li>Salve o benefício.</li>
+        <li>Vá ao restaurante no dia e turno indicados.</li>
+        <li>Faça check-in e mostre a tela ao garçom.</li>
+      </ol>
+    </main>
   `;
   mostrarAcoes();
 }
@@ -114,7 +134,7 @@ function marcar(acao, armazenamento) {
 }
 
 function naoEncontrado() {
-  area.innerHTML = '<p class="erro">Restaurante não encontrado.</p>';
+  area.innerHTML = '<main class="cliente-container" style="margin-top: 24px"><p class="erro">Restaurante não encontrado.</p></main>';
 }
 
 function escapar(texto) {

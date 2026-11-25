@@ -44,16 +44,22 @@ async function carregar() {
 
   if (error || !r) return mostrarNaoEncontrado();
 
+  // Informações à esquerda e o botão de copiar à direita (no celular, um embaixo do outro)
   areaDados.innerHTML = `
-    <h2>${escapar(r.nome)}</h2>
-    <p class="dica">${escapar(r.cozinha)}${r.bairro ? ' · ' + escapar(r.bairro) : ''}</p>
-    <p class="espaco"><span class="selo">${escapar(r.beneficio_tipo)}</span></p>
-    <p>${escapar(r.beneficio || '')}</p>
-    <p class="dica">${escapar(r.beneficio_dias)} · ${escapar(r.beneficio_turno)}</p>
-    <button id="botao-copiar" class="botao secundario">Copiar link do painel</button>
-    <p class="dica espaco">Guarde este link: é o acesso ao seu painel.</p>
+    <div class="dados-linha">
+      <div>
+        <h2>${escapar(r.nome)}</h2>
+        <p class="dica">${escapar(r.cozinha)}${r.bairro ? ' · ' + escapar(r.bairro) : ''}</p>
+        <p class="espaco"><span class="selo">${escapar(r.beneficio_tipo)}</span> ${escapar(r.beneficio || '')}</p>
+        <p class="dica">${escapar(r.beneficio_dias)} · ${escapar(r.beneficio_turno)}</p>
+      </div>
+      <div class="dados-acoes">
+        <button id="botao-copiar" class="botao secundario">Copiar link do painel</button>
+        <p class="dica">Guarde este link: é o acesso ao seu painel.</p>
+      </div>
+    </div>
   `;
-    document.getElementById('botao-copiar').addEventListener('click', async (evento) => {
+  document.getElementById('botao-copiar').addEventListener('click', async (evento) => {
     try {
       await navigator.clipboard.writeText(window.location.href);
       evento.target.textContent = 'Link copiado!';
@@ -296,31 +302,37 @@ async function carregarResultados() {
   `;
 
   areaFunil.innerHTML = `
-    ${barra('Leram o QR', leituras, leituras)}
+    ${barra('Leram o QR', leituras, leituras, false)}
     ${barra('Salvaram o benefício', salvos, leituras)}
     ${barra('Fizeram check-in', checkins, leituras)}
   `;
 
-  // Tabela por origem e a peça campeã (a que trouxe mais check-ins)
+  // Lista por origem e a peça campeã (a que trouxe mais check-ins)
   const origens = Object.keys(NOMES_ORIGEM);
   const campea = origens.reduce((melhor, o) =>
     contar('checkin', o) > contar('checkin', melhor) ? o : melhor, origens[0]);
   const temCampea = contar('checkin', campea) > 0;
 
-  const linhas = origens.map((o) => `
-    <tr>
-      <td>${NOMES_ORIGEM[o]} ${temCampea && o === campea ? '<span class="selo">Campeã</span>' : ''}</td>
-      <td>${contar('leitura', o)}</td>
-      <td>${contar('checkin', o)}</td>
-      <td>${percentual(contar('checkin', o), contar('leitura', o))}%</td>
-    </tr>
-  `).join('');
+  // data-rotulo: no celular o CSS mostra esse nome em cima de cada número
+  const linhas = origens.map((o) => {
+    const ehCampea = temCampea && o === campea;
+    return `
+      <div class="origem ${ehCampea ? 'origem-campea' : ''}">
+        <div class="origem-nome">${NOMES_ORIGEM[o]} ${ehCampea ? '<span class="selo">Campeã</span>' : ''}</div>
+        <div class="origem-valor" data-rotulo="Leituras">${contar('leitura', o)}</div>
+        <div class="origem-valor" data-rotulo="Check-ins">${contar('checkin', o)}</div>
+        <div class="origem-valor" data-rotulo="Conversão">${percentual(contar('checkin', o), contar('leitura', o))}%</div>
+      </div>
+    `;
+  }).join('');
 
   areaOrigem.innerHTML = `
-    <table class="tabela">
-      <thead><tr><th>Peça</th><th>Leituras</th><th>Check-ins</th><th>Conversão</th></tr></thead>
-      <tbody>${linhas}</tbody>
-    </table>
+    <div class="origens">
+      <div class="origem origem-cabecalho">
+        <div>Peça</div><div>Leituras</div><div>Check-ins</div><div>Conversão</div>
+      </div>
+      ${linhas}
+    </div>
   `;
 }
 
@@ -334,10 +346,12 @@ function cartaoMetrica(rotulo, valor, nota = '', destaque = false) {
   `;
 }
 
-function barra(rotulo, valor, total) {
+// mostrarPercentual = false na primeira barra, que é sempre 100%
+function barra(rotulo, valor, total, mostrarPercentual = true) {
+  const pct = mostrarPercentual ? ` <span class="barra-pct">· ${percentual(valor, total)}%</span>` : '';
   return `
     <div class="barra-linha">
-      <div class="barra-rotulo"><span>${rotulo}</span><strong>${valor}</strong></div>
+      <div class="barra-rotulo"><span>${rotulo}</span><strong>${valor}${pct}</strong></div>
       <div class="barra"><span style="width: ${percentual(valor, total)}%"></span></div>
     </div>
   `;

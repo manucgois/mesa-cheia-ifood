@@ -3,35 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mesa Cheia · Cadastro</title>
+  <title>Mesa Cheia · Comer Fora no seu salão</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header class="topo">
-    <h1>Mesa Cheia</h1>
-    <p>Leve os clientes do delivery para o seu salão com o Comer Fora</p>
+    <div class="topo-conteudo">
+      <a class="logo" href="index.html">
+        <span class="logo-icone">MC</span>
+        <span>
+          <span class="logo-nome">Mesa Cheia</span>
+          <span class="logo-sub">Para restaurantes parceiros</span>
+        </span>
+      </a>
+    </div>
   </header>
 
-  <main class="container">
-
-    <section class="card apresentacao">
-    <h2>Divulgue o Comer Fora no seu salão em 1 minuto</h2>
-    <p>A IA cria o kit de divulgação do seu restaurante. Você revisa, imprime e acompanha quantos clientes cada peça trouxe.</p>
-
-    <ol class="passos">
-      <li><strong>Cadastre</strong> o restaurante e o benefício do Comer Fora</li>
-      <li><strong>Gere com IA</strong> cartaz de mesa, display, encarte da sacola e post</li>
-      <li><strong>Acompanhe</strong> leituras, check-ins e a peça que mais traz clientes</li>
-    </ol>
-
-    <div class="acoes">
-      <a class="botao" href="painel.html?r=11111111-1111-4111-8111-111111111111">Ver demonstração</a>
-      <a class="botao secundario" href="#form-cadastro">Cadastrar meu restaurante</a>
+  <section class="hero">
+    <div class="hero-conteudo">
+      <span class="hero-selo">Comer Fora · iFood</span>
+      <h2>Leve quem pede delivery para o seu salão</h2>
+      <p>A IA cria o kit de divulgação do Comer Fora do seu restaurante. Você revisa, imprime e acompanha quantos clientes cada peça trouxe.</p>
+      <div class="hero-acoes">
+        <a class="botao botao-branco" href="painel.html?r=11111111-1111-4111-8111-111111111111">Ver demonstração</a>
+        <a class="botao botao-contorno-branco" href="#form-cadastro">Cadastrar meu restaurante</a>
+      </div>
     </div>
+  </section>
 
-    <p class="dica espaco">Protótipo para o case GenAI iFood · dados fictícios</p>
-    </section>
+  <section class="passos-cards">
+    <div class="passo">
+      <div class="passo-numero">1</div>
+      <h3>Cadastre</h3>
+      <p>O restaurante e o benefício do Comer Fora, com dias e turno.</p>
+    </div>
+    <div class="passo">
+      <div class="passo-numero">2</div>
+      <h3>Gere com IA</h3>
+      <p>Cartaz de mesa, display de balcão, encarte da sacola e post, no tom do seu restaurante.</p>
+    </div>
+    <div class="passo">
+      <div class="passo-numero">3</div>
+      <h3>Acompanhe</h3>
+      <p>Leituras do QR, check-ins e qual peça traz mais clientes.</p>
+    </div>
+  </section>
 
+  <main class="container">
     <form id="form-cadastro" class="card">
       <h2>Cadastre seu restaurante</h2>
 
@@ -104,6 +122,8 @@
       <p id="mensagem" class="mensagem"></p>
     </form>
   </main>
+
+  <p class="rodape-nota">Protótipo para o case GenAI iFood · dados fictícios</p>
 
   <script type="module" src="js/cadastro.js"></script>
 </body>

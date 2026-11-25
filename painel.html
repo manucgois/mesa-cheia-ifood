@@ -8,74 +8,91 @@
 </head>
 <body>
   <header class="topo">
-    <h1>Mesa Cheia</h1>
-    <p>Painel do restaurante</p>
+    <div class="topo-conteudo">
+      <a class="logo" href="index.html">
+        <span class="logo-icone">MC</span>
+        <span>
+          <span class="logo-nome">Mesa Cheia</span>
+          <span class="logo-sub">Painel do restaurante</span>
+        </span>
+      </a>
+      <nav class="navegacao">
+        <a href="#resultados">Resultados</a>
+        <a href="#kit">Kit</a>
+        <a href="#materiais">Materiais</a>
+      </nav>
+    </div>
   </header>
 
-  <main class="container">
+  <main class="container container-largo">
     <section id="dados" class="card">Carregando...</section>
 
     <section id="resultados" class="card" hidden>
-    <h2>Resultados do Comer Fora</h2>
-    <p class="dica">Atualiza sozinho a cada 10 segundos.</p>
+      <h2>Resultados do Comer Fora</h2>
+      <p class="dica">Atualiza sozinho a cada 10 segundos.</p>
 
-    <div id="metricas" class="metricas"></div>
+      <div id="metricas" class="metricas"></div>
 
-    <h3 class="subtitulo">Funil do cliente</h3>
-    <div id="funil"></div>
-
-    <h3 class="subtitulo">Por peça do kit</h3>
-    <div id="por-origem"></div>
-    </section>
-
-    <section id="kit" class="card" hidden>
-      <h2>Kit de divulgação</h2>
-      <p class="dica">A IA escreve, você revisa e aprova.</p>
-      <p id="kit-status" class="espaco"></p>
-
-      <button id="botao-gerar" class="botao">Gerar kit com IA</button>
-
-      <div id="kit-campos" hidden>
-        <label for="titulo_cartaz">Título do cartaz de mesa</label>
-        <input id="titulo_cartaz" maxlength="40">
-
-        <label for="texto_cartaz">Texto do cartaz</label>
-        <textarea id="texto_cartaz" maxlength="180"></textarea>
-
-        <label for="chamada_qr">Chamada ao lado do QR code</label>
-        <input id="chamada_qr" maxlength="60">
-
-        <label for="encarte_delivery">Encarte da sacola do delivery</label>
-        <textarea id="encarte_delivery" maxlength="220"></textarea>
-
-        <label for="post_redes">Post para redes sociais</label>
-        <textarea id="post_redes" maxlength="300"></textarea>
-
-        <div class="acoes">
-          <button id="botao-rascunho" class="botao secundario">Salvar rascunho</button>
-          <button id="botao-aprovar" class="botao">Aprovar kit</button>
+      <div class="resultados-detalhe">
+        <div>
+          <h3 class="subtitulo">Funil do cliente</h3>
+          <div id="funil"></div>
+        </div>
+        <div>
+          <h3 class="subtitulo">Desempenho por peça do kit</h3>
+          <div id="por-origem"></div>
         </div>
       </div>
-
-      <p id="kit-mensagem" class="mensagem"></p>
     </section>
 
-        <section id="materiais" class="card" hidden>
-      <h2>Materiais para o salão e o delivery</h2>
-      <p class="dica">Cada QR code registra de onde o cliente veio.</p>
+    <div class="duas-colunas">
+      <section id="kit" class="card" hidden>
+        <h2>Kit de divulgação</h2>
+        <p class="dica">A IA escreve, você revisa e aprova.</p>
+        <p id="kit-status" class="espaco"></p>
 
-      <div class="acoes">
-        <button id="botao-imprimir" class="botao">Imprimir materiais</button>
-        <a id="link-teste" class="botao secundario" target="_blank">Testar como cliente</a>
-      </div>
+        <button id="botao-gerar" class="botao">Gerar kit com IA</button>
 
-      <div id="pecas" class="pecas"></div>
-    </section>
+        <div id="kit-campos" hidden>
+          <label for="titulo_cartaz">Título do cartaz de mesa</label>
+          <input id="titulo_cartaz" maxlength="40">
 
+          <label for="texto_cartaz">Texto do cartaz</label>
+          <textarea id="texto_cartaz" maxlength="180"></textarea>
+
+          <label for="chamada_qr">Chamada ao lado do QR code</label>
+          <input id="chamada_qr" maxlength="60">
+
+          <label for="encarte_delivery">Encarte da sacola do delivery</label>
+          <textarea id="encarte_delivery" maxlength="220"></textarea>
+
+          <label for="post_redes">Post para redes sociais</label>
+          <textarea id="post_redes" maxlength="300"></textarea>
+
+          <div class="acoes">
+            <button id="botao-rascunho" class="botao secundario">Salvar rascunho</button>
+            <button id="botao-aprovar" class="botao">Aprovar kit</button>
+          </div>
+        </div>
+
+        <p id="kit-mensagem" class="mensagem"></p>
+      </section>
+
+      <section id="materiais" class="card" hidden>
+        <h2>Materiais para o salão e o delivery</h2>
+        <p class="dica">Cada QR code registra de onde o cliente veio.</p>
+
+        <div class="acoes">
+          <button id="botao-imprimir" class="botao">Imprimir materiais</button>
+          <a id="link-teste" class="botao secundario" target="_blank">Testar como cliente</a>
+        </div>
+
+        <div id="pecas" class="pecas"></div>
+      </section>
+    </div>
   </main>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-
   <script type="module" src="js/painel.js"></script>
 </body>
 </html>

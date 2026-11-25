@@ -1,14 +1,22 @@
+/* =========================================================
+   Mesa Cheia · estilos
+   ========================================================= */
+
 :root {
   --vermelho: #EA1D2C;
   --vermelho-escuro: #C1121F;
+  --degrade: linear-gradient(135deg, #EA1D2C 0%, #F2486B 55%, #F98BA8 100%);
   --texto: #3E3E3E;
   --cinza: #717171;
   --fundo: #F7F7F7;
   --borda: #E6E6E6;
   --verde: #2E7D32;
+  --sombra: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 84px; }
 
 body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -17,11 +25,61 @@ body {
   line-height: 1.5;
 }
 
-.topo { background: var(--vermelho); color: #fff; padding: 16px 24px; }
-.topo h1 { font-size: 20px; }
-.topo p { font-size: 14px; opacity: 0.9; }
+a { color: var(--vermelho); }
 
+/* ---------- Cabeçalho ---------- */
+/* No celular o cabeçalho rola junto (ocuparia muito da tela); fixo só a partir de 600px */
+@media (max-width: 599px) {
+  html { scroll-padding-top: 16px; }
+  .topo { position: static !important; }
+}
+.topo {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--vermelho);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+.topo-conteudo {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.logo { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; }
+.logo-icone {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--vermelho);
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 14px;
+}
+.logo-nome { display: block; font-size: 18px; font-weight: 700; line-height: 1.1; }
+.logo-sub { display: block; font-size: 12px; opacity: 0.9; }
+
+.navegacao { display: flex; gap: 4px; }
+.navegacao a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+.navegacao a:hover { background: rgba(255, 255, 255, 0.18); }
+
+/* ---------- Estrutura ---------- */
 .container { max-width: 720px; margin: 24px auto; padding: 0 16px; }
+.container-largo { max-width: 1100px; }
 
 .card {
   background: #fff;
@@ -29,9 +87,11 @@ body {
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 16px;
+  box-shadow: var(--sombra);
 }
 .card h2 { font-size: 18px; margin-bottom: 8px; }
 
+/* ---------- Formulários ---------- */
 label { display: block; font-weight: 600; font-size: 14px; margin: 12px 0 4px; }
 
 input, select, textarea {
@@ -41,12 +101,19 @@ input, select, textarea {
   border-radius: 8px;
   font-size: 15px;
   font-family: inherit;
+  background: #fff;
 }
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid rgba(234, 29, 44, 0.25);
+  border-color: var(--vermelho);
+}
+textarea { min-height: 80px; resize: vertical; }
 
 .dias { display: flex; flex-wrap: wrap; gap: 12px; }
 .dias label { display: flex; align-items: center; gap: 4px; margin: 0; font-weight: 400; }
 .dias input { width: auto; }
 
+/* ---------- Botões ---------- */
 .botao {
   width: 100%;
   margin-top: 20px;
@@ -61,11 +128,31 @@ input, select, textarea {
 }
 .botao:hover { background: var(--vermelho-escuro); }
 .botao:disabled { opacity: 0.6; cursor: wait; }
+a.botao { display: block; text-align: center; text-decoration: none; }
 
+.secundario { background: #fff; color: var(--vermelho); border: 1px solid var(--vermelho); }
+.secundario:hover { background: #FFF1F2; }
+
+.botao-escuro { background: #111; }
+.botao-escuro:hover { background: #333; }
+
+.botao-branco { background: #fff; color: var(--vermelho); }
+.botao-branco:hover { background: #FFF1F2; }
+
+.botao-contorno-branco { background: transparent; color: #fff; border: 2px solid #fff; }
+.botao-contorno-branco:hover { background: rgba(255, 255, 255, 0.15); }
+
+.acoes { display: flex; gap: 12px; }
+.acoes .botao { margin-top: 16px; }
+
+/* ---------- Textos de apoio ---------- */
 .mensagem { margin-top: 12px; font-size: 14px; }
 .erro { color: var(--vermelho-escuro); }
+.ok { color: var(--verde); }
 .dica { color: var(--cinza); font-size: 13px; }
 .espaco { margin-top: 12px; }
+.centro { text-align: center; }
+.subtitulo { font-size: 15px; margin: 20px 0 8px; }
 
 .selo {
   display: inline-block;
@@ -76,25 +163,139 @@ input, select, textarea {
   font-size: 13px;
   font-weight: 600;
 }
-
-textarea { min-height: 80px; resize: vertical; }
-
-.acoes { display: flex; gap: 12px; }
-.acoes .botao { margin-top: 16px; }
-
-.secundario {
-  background: #fff;
-  color: var(--vermelho);
-  border: 1px solid var(--vermelho);
-}
-.secundario:hover { background: #FFF1F2; }
-
 .selo-rascunho { background: #FFF8E1; color: #8D6E00; }
-.ok { color: var(--verde); }
 
-/* ---------- Materiais ---------- */
-a.botao { display: block; text-align: center; text-decoration: none; }
+/* =========================================================
+   Página inicial
+   ========================================================= */
+.hero { background: var(--degrade); color: #fff; }
+.hero-conteudo { max-width: 1100px; margin: 0 auto; padding: 56px 16px 88px; }
+.hero-selo {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.hero h2 {
+  font-size: clamp(28px, 5vw, 44px);
+  line-height: 1.15;
+  margin: 16px 0 12px;
+  max-width: 720px;
+}
+.hero p { font-size: 18px; max-width: 620px; opacity: 0.95; }
+.hero-acoes { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+.hero-acoes .botao { width: auto; margin-top: 0; padding: 14px 24px; }
 
+.passos-cards {
+  max-width: 1100px;
+  margin: -48px auto 0;
+  padding: 0 16px;
+  display: grid;
+  gap: 16px;
+  position: relative;
+}
+@media (min-width: 760px) { .passos-cards { grid-template-columns: repeat(3, 1fr); } }
+
+.passo {
+  background: #fff;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--sombra);
+}
+.passo-numero {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #FFF1F2;
+  color: var(--vermelho);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.passo h3 { font-size: 16px; margin-bottom: 4px; }
+.passo p { font-size: 14px; color: var(--cinza); }
+
+.rodape-nota { text-align: center; color: var(--cinza); font-size: 13px; margin: 8px 16px 40px; }
+
+/* =========================================================
+   Painel do restaurante
+   ========================================================= */
+.dados-linha { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.dados-acoes { min-width: 220px; }
+.dados-acoes .botao { margin-top: 0; margin-bottom: 6px; }
+
+/* Métricas */
+.metricas { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
+@media (min-width: 600px) { .metricas { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1000px) { .metricas { grid-template-columns: repeat(6, 1fr); } }
+.metrica { background: var(--fundo); border-radius: 12px; padding: 12px 14px; }
+.metrica-rotulo { font-size: 13px; color: var(--cinza); }
+.metrica-valor { font-size: 24px; font-weight: 700; }
+.metrica-nota { font-size: 11px; color: var(--cinza); }
+.metrica-destaque { background: #FFF1F2; }
+.metrica-destaque .metrica-valor { color: var(--vermelho); }
+
+/* Funil e peças lado a lado no computador */
+.resultados-detalhe { display: grid; gap: 8px 32px; }
+@media (min-width: 1000px) { .resultados-detalhe { grid-template-columns: 1fr 1fr; } }
+
+.barra-linha { margin: 10px 0; }
+.barra-rotulo { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+.barra-pct { color: var(--cinza); font-weight: 400; }
+.barra { height: 12px; background: var(--fundo); border-radius: 999px; overflow: hidden; }
+.barra span { display: block; height: 100%; background: var(--vermelho); border-radius: 999px; }
+
+/* Desempenho por peça */
+.origens { display: grid; gap: 8px; }
+.origem {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--fundo);
+  border-radius: 10px;
+  font-size: 14px;
+}
+.origem-cabecalho {
+  background: none;
+  padding-top: 0;
+  padding-bottom: 0;
+  color: var(--cinza);
+  font-size: 12px;
+  font-weight: 600;
+}
+.origem-campea { background: #E8F5E9; }
+.origem-nome { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: 600; }
+.origem-nome .selo { background: #fff; font-size: 11px; padding: 2px 8px; }
+
+@media (max-width: 599px) {
+  .origem-cabecalho { display: none; }
+  .origem { grid-template-columns: repeat(3, 1fr); }
+  .origem-nome { grid-column: 1 / -1; }
+  .origem-valor { font-weight: 700; }
+  .origem-valor::before {
+    content: attr(data-rotulo);
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--cinza);
+  }
+}
+
+/* Kit e materiais lado a lado no computador */
+.duas-colunas { display: grid; gap: 0 16px; align-items: start; }
+@media (min-width: 1000px) {
+  .duas-colunas { grid-template-columns: 1fr 1fr; }
+  .duas-colunas:has(#materiais[hidden]) { grid-template-columns: 1fr; }
+  #materiais { position: sticky; top: 84px; max-height: calc(100vh - 100px); overflow: auto; }
+}
+
+/* Materiais */
 .pecas { display: grid; gap: 16px; margin-top: 16px; }
 .peca {
   border: 1px dashed var(--borda);
@@ -107,75 +308,86 @@ a.botao { display: block; text-align: center; text-decoration: none; }
 .peca .qr { width: 150px; margin: 12px auto; }
 .peca .qr svg { width: 100%; height: auto; }
 .peca-marca { font-size: 12px; color: var(--cinza); margin-top: 8px; }
+.peca-pequena { max-width: 360px; margin: 0 auto; }
+.peca-pequena .qr { width: 120px; }
 .link { word-break: break-all; font-size: 13px; }
 
-/* ---------- Página do cliente ---------- */
+/* =========================================================
+   Página do cliente (simula o Comer Fora)
+   ========================================================= */
 .cliente { background: #fff; }
-.cliente-container { max-width: 480px; margin: 0 auto; padding: 24px 16px; }
-.marca { color: var(--vermelho); font-weight: 600; font-size: 14px; }
-.cliente h1 { font-size: 26px; margin: 4px 0; }
-.beneficio { background: var(--fundo); border-radius: 12px; padding: 16px; margin: 16px 0; }
-.beneficio-tipo { font-size: 22px; font-weight: 700; }
+
+.cliente-banner { background: var(--degrade); color: #fff; padding: 28px 20px 72px; }
+.cliente-banner-conteudo { max-width: 480px; margin: 0 auto; }
+.marca-branca { font-weight: 700; font-size: 14px; opacity: 0.95; }
+.cliente-restaurante { display: flex; align-items: center; gap: 14px; margin-top: 20px; }
+.avatar {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: #fff;
+  color: var(--vermelho);
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  font-weight: 800;
+}
+.cliente-banner h1 { font-size: 26px; line-height: 1.15; }
+.cliente-banner .sub { font-size: 14px; opacity: 0.9; }
+
+.cliente-container { max-width: 480px; margin: -48px auto 0; padding: 0 16px 24px; position: relative; }
+
+.beneficio {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
+}
+.beneficio-tipo { font-size: 26px; font-weight: 800; color: var(--vermelho); line-height: 1.2; }
 .chip {
   display: inline-block;
-  background: #fff;
-  border: 1px solid var(--borda);
+  background: var(--fundo);
   border-radius: 999px;
-  padding: 2px 10px;
+  padding: 4px 12px;
   font-size: 13px;
-  margin-right: 4px;
+  margin: 4px 4px 0 0;
 }
-.botao-escuro { background: #111; }
-.botao-escuro:hover { background: #333; }
+
 .sucesso {
   background: #E8F5E9;
   color: var(--verde);
   border-radius: 8px;
   padding: 12px;
   font-weight: 600;
-  margin-top: 8px;
+  margin-top: 12px;
 }
-.centro { text-align: center; }
 
-/* ---------- Impressão: só os materiais ---------- */
+.como-funciona { margin-top: 28px; padding: 16px 16px 16px 36px; background: var(--fundo); border-radius: 12px; font-size: 14px; }
+.como-funciona li + li { margin-top: 6px; }
+.como-funciona-titulo { font-size: 14px; font-weight: 700; margin-top: 28px; }
+.como-funciona-titulo + .como-funciona { margin-top: 8px; }
+
+/* =========================================================
+   Impressão: só os materiais
+   ========================================================= */
+@page { size: A4 portrait; margin: 12mm; }
+
 @media print {
   body { background: #fff; }
   .topo, #dados, #kit, #resultados, #materiais > h2, #materiais > .dica,
   #materiais .acoes, .nao-imprimir { display: none !important; }
-  .card { border: none; padding: 0; }
-  .peca { border: 2px dashed #999; break-inside: avoid; page-break-inside: avoid; margin-bottom: 24px; }
-}
-
-/* ---------- Resultados ---------- */
-.subtitulo { font-size: 15px; margin: 20px 0 8px; }
-
-.metricas { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
-@media (min-width: 600px) { .metricas { grid-template-columns: repeat(3, 1fr); } }
-.metrica { background: var(--fundo); border-radius: 12px; padding: 12px 14px; }
-.metrica-rotulo { font-size: 13px; color: var(--cinza); }
-.metrica-valor { font-size: 24px; font-weight: 700; }
-.metrica-nota { font-size: 11px; color: var(--cinza); }
-.metrica-destaque { background: #FFF1F2; }
-.metrica-destaque .metrica-valor { color: var(--vermelho); }
-
-.barra-linha { margin: 10px 0; }
-.barra-rotulo { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
-.barra { height: 12px; background: var(--fundo); border-radius: 999px; overflow: hidden; }
-.barra span { display: block; height: 100%; background: var(--vermelho); border-radius: 999px; }
-
-.tabela { width: 100%; border-collapse: collapse; font-size: 14px; }
-.tabela th, .tabela td { padding: 8px 6px; border-bottom: 1px solid var(--borda); text-align: left; }
-.tabela th { color: var(--cinza); font-weight: 600; font-size: 13px; }
-
-/* ---------- Acabamento (passo 6) ---------- */
-.apresentacao h2 { font-size: 22px; }
-.passos { margin: 16px 0 0 20px; display: grid; gap: 8px; }
-
-.peca-pequena { max-width: 360px; margin: 0 auto; }
-.peca-pequena .qr { width: 120px; }
-
-@media print {
+  .card { border: none; padding: 0; box-shadow: none; }
+  .duas-colunas { display: block; }
+  #materiais { position: static; max-height: none; overflow: visible; }
   .pecas { display: block; }
-  .peca { padding: 16px; margin-bottom: 16px; }
+  .peca {
+    border: 2px dashed #999;
+    padding: 16px;
+    margin-bottom: 16px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
   .peca .qr { width: 130px; }
 }
