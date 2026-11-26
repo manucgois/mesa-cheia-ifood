@@ -1,4 +1,5 @@
 import { supabase } from './db.js';
+import { verificarKit } from './checagem.js';
 
 const CAMPOS = ['titulo_cartaz', 'texto_cartaz', 'chamada_qr', 'encarte_delivery', 'post_redes'];
 
@@ -7,6 +8,7 @@ const areaDados = document.getElementById('dados');
 const secaoKit = document.getElementById('kit');
 const kitCampos = document.getElementById('kit-campos');
 const kitStatus = document.getElementById('kit-status');
+const areaAlertas = document.getElementById('kit-alertas');
 const kitMensagem = document.getElementById('kit-mensagem');
 const botaoGerar = document.getElementById('botao-gerar');
 const botaoRascunho = document.getElementById('botao-rascunho');
@@ -501,6 +503,12 @@ async function salvar(status) {
     return mostrarMensagem('Preencha todas as peças antes de salvar.', 'erro');
   }
 
+  // Com alertas, o primeiro clique em Aprovar só avisa; o segundo aprova (a decisão é do dono)
+  if (status === 'aprovado' && alertasAtuais.length > 0 && !confirmouAlertas) {
+    confirmouAlertas = true;
+    return mostrarMensagem('O kit tem alertas. Confira os textos e clique em Aprovar de novo para aprovar mesmo assim.', 'erro');
+  }
+
   const { data, error } = await supabase
     .from('kits')
     .update({ ...textos, status })
@@ -537,7 +545,30 @@ function preencherCampos(kit) {
   });
   kitCampos.hidden = false;
   botaoGerar.textContent = 'Gerar nova versão com IA';
+  atualizarAlertas();
 }
+
+// ---------- Checagem de conteúdo ----------
+// Compara os textos com a campanha (números, dias e turno) e avisa o dono antes de aprovar.
+
+let alertasAtuais = [];
+let confirmouAlertas = false;
+
+function atualizarAlertas() {
+  confirmouAlertas = false; // texto mudou: o dono precisa olhar de novo
+  alertasAtuais = campanhaAtual ? verificarKit(lerCampos(), campanhaAtual) : [];
+  areaAlertas.hidden = alertasAtuais.length === 0;
+  areaAlertas.innerHTML = `
+    <b>Confira antes de aprovar:</b>
+    <ul>${alertasAtuais.map((a) => `<li>${escapar(a)}</li>`).join('')}</ul>
+    <span class="dica">A checagem compara números, dias e turno com a campanha. Ela não garante tudo: a revisão continua sendo sua.</span>
+  `;
+}
+
+// Reconfere a cada alteração que o dono faz nos textos
+CAMPOS.forEach((campo) => {
+  document.getElementById(campo).addEventListener('input', atualizarAlertas);
+});
 
 function limparCampos() {
   CAMPOS.forEach((campo) => {
@@ -670,11 +701,11 @@ async function carregarResultados() {
 
   // 4 números, cada um aparece uma vez só. O funil fica dentro dos cartões (as barras).
   areaMetricas.innerHTML = `
-    ${kpi('Leituras do QR', leituras, 'pessoas que abriram a oferta')}
+    ${kpi('Leituras do QR', leituras, 'aberturas da oferta (uma por peça, por sessão)')}
     ${kpi('Salvaram o benefício', salvos, `${percentual(salvos, leituras)}% das leituras`, percentual(salvos, leituras))}
     ${kpi('Check-ins', checkins, `${percentual(checkins, leituras)}% de conversão`, percentual(checkins, leituras), true)}
-    ${kpi('Faturamento estimado', ticket ? formatarReais(pessoas * ticket) : '—',
-        ticket ? `${pessoas} pessoas × ${formatarReais(ticket)}` : 'ticket médio indisponível')}
+    ${kpi('Faturamento potencial', ticket ? formatarReais(pessoas * ticket) : '—',
+        ticket ? `${pessoas} pessoas × ticket médio ${formatarReais(ticket)} · sem confirmação de consumo` : 'ticket médio indisponível')}
   `;
 
   mostrarPorOrigem(contar, checkins);

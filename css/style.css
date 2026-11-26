@@ -330,6 +330,11 @@ button.restaurante-item { width: 100%; background: none; font: inherit; text-ali
   cursor: pointer;
 }
 
+/* Alertas da checagem do kit */
+.kit-alertas ul { margin: 6px 0 6px 20px; }
+.kit-alertas li + li { margin-top: 2px; }
+.kit-alertas .dica { display: block; }
+
 /* Campanhas anteriores */
 .anteriores { margin-top: 28px; padding-top: 8px; border-top: 1px solid var(--borda); }
 #anteriores { display: grid; gap: 10px; margin-top: 12px; }

@@ -40,9 +40,11 @@ async function iniciar() {
   // Sem campanha ativa não há o que contar
   if (!campanha) return;
 
-  // Registra a leitura do QR uma vez por sessão (recarregar a página não conta de novo)
-  if (!jaFez('leitura', sessionStorage)) {
-    if (await registrar('leitura')) marcar('leitura', sessionStorage);
+  // Registra a leitura do QR uma vez por sessão E por peça: recarregar a página não conta de novo,
+  // mas ler o QR do cartaz e depois o da sacola conta as duas (cada peça tem a sua leitura).
+  const chaveLeitura = `leitura-${origem || 'sem-origem'}`;
+  if (!jaFez(chaveLeitura, sessionStorage)) {
+    if (await registrar('leitura')) marcar(chaveLeitura, sessionStorage);
   }
 }
 
