@@ -283,6 +283,20 @@ async function encerrarAtiva() {
 
 // ---------- Campanhas anteriores e reativação ----------
 
+// Duas campanhas são "a mesma oferta" quando benefício, detalhe, dias, turno e tom são iguais
+function mesmaOferta(a, b) {
+  return ['beneficio_tipo', 'beneficio', 'beneficio_dias', 'beneficio_turno', 'tom']
+    .every((campo) => (a[campo] || '') === (b[campo] || ''));
+}
+
+// Só faz sentido reativar uma oferta que não está no ar agora, e só a versão mais recente dela
+function podeReativar(c) {
+  if (c.status !== 'encerrada') return false;
+  if (campanhaAtual && mesmaOferta(c, campanhaAtual)) return false;
+  const maisRecente = campanhas.find((outra) => outra.status === 'encerrada' && mesmaOferta(outra, c));
+  return maisRecente === c; // campanhas vem da mais nova para a mais antiga
+}
+
 function mostrarAnteriores() {
   const anteriores = campanhas.filter((c) => c.status === 'encerrada');
   blocoAnteriores.hidden = anteriores.length === 0;
@@ -294,7 +308,9 @@ function mostrarAnteriores() {
           <p><span class="selo selo-cinza">${escapar(c.beneficio_tipo)}</span> ${escapar(c.beneficio || '')}</p>
           <p class="dica">${escapar(c.beneficio_dias)} · ${escapar(c.beneficio_turno)} · ${formatarData(c.criada_em)} a ${formatarData(c.encerrada_em)}</p>
         </div>
-        <button type="button" class="botao secundario botao-reativar">Reativar</button>
+        ${podeReativar(c)
+          ? '<button type="button" class="botao secundario botao-reativar">Reativar</button>'
+          : `<span class="dica">${campanhaAtual && mesmaOferta(c, campanhaAtual) ? 'Igual à campanha ativa' : 'Já reativada depois'}</span>`}
       </div>
       <div class="anterior-confirmar" hidden>
         <p class="aviso">${campanhaAtual
@@ -311,6 +327,7 @@ function mostrarAnteriores() {
   areaAnteriores.querySelectorAll('.anterior').forEach((linha) => {
     const confirmar = linha.querySelector('.anterior-confirmar');
     const botaoReativar = linha.querySelector('.botao-reativar');
+    if (!botaoReativar) return; // oferta já no ar: sem botão
     botaoReativar.addEventListener('click', () => { confirmar.hidden = false; botaoReativar.hidden = true; });
     linha.querySelector('.botao-cancelar-reativar').addEventListener('click', () => { confirmar.hidden = true; botaoReativar.hidden = false; });
     linha.querySelector('.botao-confirmar-reativar').addEventListener('click', (evento) => {
@@ -760,7 +777,7 @@ function mostrarComparacao(todos) {
     const selos =
       (l.c.status === 'ativa' ? ' <span class="selo">Ativa</span>' : '') +
       (l === melhor ? ' <span class="selo">Melhor conversão</span>' : '') +
-      (l.c.status === 'encerrada' ? ' <button type="button" class="link-botao ir-anteriores">Reativar →</button>' : '');
+      (podeReativar(l.c) ? ' <button type="button" class="link-botao ir-anteriores">Reativar →</button>' : '');
     return `
       <div class="origem ${l === melhor ? 'origem-campea' : ''}">
         <div class="origem-nome">
