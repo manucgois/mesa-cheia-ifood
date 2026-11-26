@@ -33,6 +33,8 @@ const campanhaAviso = document.getElementById('campanha-aviso');
 const campanhaMensagem = document.getElementById('campanha-mensagem');
 const botaoSalvarCampanha = document.getElementById('botao-salvar-campanha');
 const botaoCancelarCampanha = document.getElementById('botao-cancelar-campanha');
+const blocoAnteriores = document.getElementById('anteriores-bloco');
+const areaAnteriores = document.getElementById('anteriores');
 
 const NOMES_ORIGEM = {
   mesa: 'Cartaz de mesa',
@@ -177,6 +179,7 @@ async function carregarCampanha() {
 
 function mostrarCampanha() {
   secaoCampanha.hidden = false;
+  mostrarAnteriores();
 
   if (!campanhaAtual) {
     areaCampanhaAtual.innerHTML = temCampanhaAnterior
@@ -247,17 +250,9 @@ formCampanha.addEventListener('submit', async (evento) => {
   botaoSalvarCampanha.disabled = true;
 
   // 1. Encerra a campanha atual. Precisa vir antes: o banco só aceita UMA ativa por restaurante.
-  //    Nada é apagado: a campanha fica guardada, com os eventos e o kit dela.
-  if (campanhaAtual) {
-    const { error } = await supabase
-      .from('campanhas')
-      .update({ status: 'encerrada', encerrada_em: new Date().toISOString() })
-      .eq('id', campanhaAtual.id);
-    if (error) {
-      console.error(error);
-      botaoSalvarCampanha.disabled = false;
-      return mostrarMensagemCampanha('Não foi possível encerrar a campanha atual. Tente de novo.', 'erro');
-    }
+  if (!(await encerrarAtiva())) {
+    botaoSalvarCampanha.disabled = false;
+    return mostrarMensagemCampanha('Não foi possível encerrar a campanha atual. Tente de novo.', 'erro');
   }
 
   // 2. Cria a nova campanha
@@ -273,6 +268,115 @@ formCampanha.addEventListener('submit', async (evento) => {
   await carregarCampanha();
   mostrarMensagemCampanha('Campanha criada! Agora gere o kit de divulgação com IA.', 'ok');
 });
+
+// Encerra a campanha ativa (se houver). Nada é apagado: ela fica guardada, com os eventos e o kit.
+// Devolve true se deu certo.
+async function encerrarAtiva() {
+  if (!campanhaAtual) return true;
+  const { error } = await supabase
+    .from('campanhas')
+    .update({ status: 'encerrada', encerrada_em: new Date().toISOString() })
+    .eq('id', campanhaAtual.id);
+  if (error) console.error(error);
+  return !error;
+}
+
+// ---------- Campanhas anteriores e reativação ----------
+
+function mostrarAnteriores() {
+  const anteriores = campanhas.filter((c) => c.status === 'encerrada');
+  blocoAnteriores.hidden = anteriores.length === 0;
+
+  areaAnteriores.innerHTML = anteriores.map((c) => `
+    <div class="anterior" data-id="${c.id}">
+      <div class="anterior-linha">
+        <div>
+          <p><span class="selo selo-cinza">${escapar(c.beneficio_tipo)}</span> ${escapar(c.beneficio || '')}</p>
+          <p class="dica">${escapar(c.beneficio_dias)} · ${escapar(c.beneficio_turno)} · ${formatarData(c.criada_em)} a ${formatarData(c.encerrada_em)}</p>
+        </div>
+        <button type="button" class="botao secundario botao-reativar">Reativar</button>
+      </div>
+      <div class="anterior-confirmar" hidden>
+        <p class="aviso">${campanhaAtual
+          ? `A campanha <b>${escapar(campanhaAtual.beneficio_tipo)}</b> será encerrada e os números dela ficam guardados. `
+          : ''}O <b>${escapar(c.beneficio_tipo)}</b> volta como uma campanha nova, com o kit aprovado dele. Se você guardou os materiais impressos dessa campanha, eles voltam a valer.</p>
+        <div class="acoes">
+          <button type="button" class="botao secundario botao-cancelar-reativar">Cancelar</button>
+          <button type="button" class="botao botao-confirmar-reativar">Confirmar reativação</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  areaAnteriores.querySelectorAll('.anterior').forEach((linha) => {
+    const confirmar = linha.querySelector('.anterior-confirmar');
+    const botaoReativar = linha.querySelector('.botao-reativar');
+    botaoReativar.addEventListener('click', () => { confirmar.hidden = false; botaoReativar.hidden = true; });
+    linha.querySelector('.botao-cancelar-reativar').addEventListener('click', () => { confirmar.hidden = true; botaoReativar.hidden = false; });
+    linha.querySelector('.botao-confirmar-reativar').addEventListener('click', (evento) => {
+      evento.target.disabled = true;
+      reativar(campanhas.find((c) => c.id === linha.dataset.id));
+    });
+  });
+}
+
+// Reativar = criar uma campanha NOVA igual à antiga e copiar o kit aprovado dela.
+// Assim o histórico fica limpo: cada período tem a sua linha e os seus números.
+async function reativar(antiga) {
+  mostrarMensagemCampanha('Reativando...', '');
+
+  // 1. O kit aprovado mais recente da campanha antiga (pode não existir)
+  const { data: kits } = await supabase
+    .from('kits')
+    .select('*')
+    .eq('campanha_id', antiga.id)
+    .eq('status', 'aprovado')
+    .order('criado_em', { ascending: false })
+    .limit(1);
+  const kitAntigo = kits && kits.length > 0 ? kits[0] : null;
+
+  // 2. Encerra a ativa (o banco só aceita uma ativa por restaurante)
+  if (!(await encerrarAtiva())) {
+    await carregarCampanha();
+    return mostrarMensagemCampanha('Não foi possível encerrar a campanha atual. Tente de novo.', 'erro');
+  }
+
+  // 3. Cria a campanha nova com o mesmo benefício, dias, turno e tom
+  const { data: nova, error } = await supabase
+    .from('campanhas')
+    .insert({
+      restaurante_id: id,
+      beneficio_tipo: antiga.beneficio_tipo,
+      beneficio: antiga.beneficio,
+      beneficio_dias: antiga.beneficio_dias,
+      beneficio_turno: antiga.beneficio_turno,
+      tom: antiga.tom,
+    })
+    .select()
+    .single();
+  if (error) {
+    console.error(error);
+    await carregarCampanha();
+    return mostrarMensagemCampanha('Não foi possível reativar. Tente de novo.', 'erro');
+  }
+
+  // 4. Copia o kit aprovado, já aprovado: os materiais ficam liberados sem chamar a IA
+  if (kitAntigo) {
+    const copia = { restaurante_id: id, campanha_id: nova.id, status: 'aprovado' };
+    CAMPOS.forEach((campo) => { copia[campo] = kitAntigo[campo]; });
+    const { error: erroKit } = await supabase.from('kits').insert(copia);
+    if (erroKit) console.error(erroKit);
+  }
+
+  mostrarMensagem('', '');
+  await carregarCampanha();
+  mostrarMensagemCampanha(
+    kitAntigo
+      ? 'Campanha reativada com o kit aprovado. Os materiais já estão liberados.'
+      : 'Campanha reativada. Ela não tinha kit aprovado: gere um com IA.',
+    'ok'
+  );
+}
 
 function mostrarMensagemCampanha(texto, tipo) {
   campanhaMensagem.textContent = texto;
@@ -655,7 +759,8 @@ function mostrarComparacao(todos) {
       : `desde ${formatarData(l.c.criada_em)}`;
     const selos =
       (l.c.status === 'ativa' ? ' <span class="selo">Ativa</span>' : '') +
-      (l === melhor ? ' <span class="selo">Melhor conversão</span>' : '');
+      (l === melhor ? ' <span class="selo">Melhor conversão</span>' : '') +
+      (l.c.status === 'encerrada' ? ' <button type="button" class="link-botao ir-anteriores">Reativar →</button>' : '');
     return `
       <div class="origem ${l === melhor ? 'origem-campea' : ''}">
         <div class="origem-nome">
@@ -680,6 +785,14 @@ function mostrarComparacao(todos) {
 }
 
 // Um cartão de número. Com "barra", mostra a etapa do funil em relação às leituras.
+// O atalho "Reativar →" da comparação leva para a lista de campanhas anteriores
+function irParaAnteriores(evento) {
+  if (!evento.target.classList.contains('ir-anteriores')) return;
+  mostrarAba('campanha');
+  blocoAnteriores.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+areaComparacao.addEventListener('click', irParaAnteriores); // registrado uma vez só
+
 function kpi(rotulo, valor, nota, barra = null, destaque = false) {
   return `
     <div class="kpi ${destaque ? 'kpi-destaque' : ''}">

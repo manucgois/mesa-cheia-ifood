@@ -330,6 +330,15 @@ button.restaurante-item { width: 100%; background: none; font: inherit; text-ali
   cursor: pointer;
 }
 
+/* Campanhas anteriores */
+.anteriores { margin-top: 28px; padding-top: 8px; border-top: 1px solid var(--borda); }
+#anteriores { display: grid; gap: 10px; margin-top: 12px; }
+.anterior { border: 1px solid var(--borda); border-radius: 10px; padding: 12px 14px; }
+.anterior-linha { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.anterior-linha .botao { width: auto; margin-top: 0; padding: 8px 16px; }
+.anterior-confirmar .acoes .botao { margin-top: 12px; }
+.selo-cinza { background: var(--fundo); color: var(--texto); }
+
 /* Peças e dias lado a lado no computador */
 .resultados-detalhe { display: grid; gap: 8px 40px; margin-top: 8px; }
 @media (min-width: 1000px) { .resultados-detalhe { grid-template-columns: 1fr 1fr; } }
