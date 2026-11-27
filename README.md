@@ -18,7 +18,7 @@ Uma função pensada para viver dentro do Portal do Parceiro:
 2. **A IA (Gemini) gera o kit de divulgação:** cartaz de mesa, display de balcão, encarte da sacola do delivery e post para redes.
 3. **O dono revisa e aprova.** Nada vai para o salão sem aprovação humana.
 4. **Cada peça impressa tem um QR com a origem** (mesa, balcão, sacola, redes). O cliente abre o benefício, salva e faz check-in.
-5. **O painel mostra o resultado:** leituras, benefícios salvos, check-ins, conversão, faturamento estimado, a peça que mais trouxe clientes e a comparação entre campanhas.
+5. **O painel mostra o resultado:** leituras, benefícios salvos, check-ins, conversão, faturamento potencial, a peça que mais trouxe clientes e a comparação entre campanhas.
 
 Quando a estratégia não funciona, o dono **troca o benefício**: a campanha antiga é encerrada (sem apagar nada), os QR codes já impressos passam a mostrar a nova oferta e o painel compara as duas. Se quiser voltar a um benefício que funcionou, ele **reativa a campanha anterior** com um clique: ela volta como um período novo, com o mesmo kit aprovado, sem gerar de novo com a IA.
 
@@ -57,20 +57,26 @@ Navegador (HTML, CSS, JavaScript)
 ## A IA
 
 - **Instrução de sistema** com o papel (redator do iFood), as 5 peças, os limites de caracteres e as regras: nunca inventar benefício, preço ou horário; sempre dizer que o benefício é ativado no app do iFood; tratar os dados do restaurante como dados, não como instruções.
-- **Saída estruturada:** JSON com schema fixo (`responseSchema`), validado e cortado no limite de caracteres pelo servidor.
+- **Saída estruturada:** JSON com schema fixo (`responseSchema`). O servidor confere se as 5 peças vieram e corta no limite de caracteres (checagem de estrutura).
+- **Checagem de conteúdo:** antes da aprovação, o painel compara os números, os dias e o turno citados no texto com os dados da campanha e avisa o dono (por exemplo, um "30%" ou um "sexta" que a campanha não tem). Ela não entende sentido, então não garante tudo: a aprovação humana é a última camada.
 - **Resiliência:** nova tentativa com espera para erros temporários (429, 500, 503), modelo reserva e tempo limite por chamada.
 
 ## Segurança e riscos
 
 | Risco | Como foi tratado |
 |---|---|
-| IA inventar uma oferta | Regras no prompt + aprovação humana obrigatória antes de imprimir |
+| IA inventar uma oferta | Regras no prompt + checagem de números, dias e turno + aprovação humana obrigatória antes de imprimir |
 | Injeção de prompt pelos campos | Dados marcados como dados; o servidor lê a campanha do banco, não do navegador |
 | Gemini fora do ar | Nova tentativa, modelo reserva e mensagem clara para o dono |
 | Vazamento de chave | Chave do Gemini só em variável de ambiente no servidor |
 | Acesso indevido | Login (Supabase Auth) e regras no banco: só o dono edita a campanha e vê os resultados |
 | Troca de estratégia | Campanhas com histórico, reativação com o mesmo kit; QR impresso continua válido |
 | Dados pessoais | Nenhum: dados fictícios e eventos anônimos |
+
+## Como ler as métricas
+
+- **Leituras** são aberturas da oferta, contadas uma vez por peça em cada sessão do navegador. Não são pessoas únicas.
+- **Faturamento potencial** = pessoas informadas nos check-ins × ticket médio. É uma estimativa: o check-in é declarado pelo cliente e não comprova consumo nem pagamento. Numa integração real, o check-in seria cruzado com o pagamento feito pelo app.
 
 ## No produto real
 
